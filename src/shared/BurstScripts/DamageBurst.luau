@@ -1,13 +1,19 @@
 local DamageBurst = {}
 
-DamageBurst.name = "Speed Burst"
+DamageBurst.name = "Damage Burst"
 DamageBurst.cost = 20
 DamageBurst.cooldown = 0.5
 DamageBurst.stat = "DamageMult"
 DamageBurst.animationId = "rbxassetid://139580504376878"
 
 function DamageBurst.clientChanges(character)
-	print("none for this burst")
+	local humanoid = character:FindFirstChild("Humanoid")
+	local animation = DamageBurst.animationId
+	local animator = humanoid:WaitForChild("Animator")
+	local anim = Instance.new("Animation")
+	anim.AnimationId = animation
+	local track = animator:LoadAnimation(anim)
+	track:Play()
 end
 
 function DamageBurst.activate(player)

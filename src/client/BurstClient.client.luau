@@ -1,7 +1,6 @@
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
 player.CharacterAdded:Connect(function(char)character = char end)
 local humanoidRoot = character:WaitForChild("HumanoidRootPart")
 
@@ -12,12 +11,6 @@ local cooldownTime = burstScript.cooldown
 local lastAttackTime = 0
 local cost = burstScript.cost
 local stat = burstScript.stat
-
-local animation = burstScript.animationId
-local animator = humanoid:WaitForChild("Animator")
-local anim = Instance.new("Animation")
-anim.AnimationId = animation
-local track = animator:LoadAnimation(anim)
 
 task.wait(0.25)
 local playerItems = game:GetService("StarterPack"):GetChildren()
@@ -63,7 +56,6 @@ UIS.InputBegan:Connect(function(input, processed)
 				print(stored)
 				print(cost)
 				-- set stat -= 30 on server later
-				track:Play()
 
 				lastAttackTime = currentTime
 				
