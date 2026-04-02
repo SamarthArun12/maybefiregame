@@ -1,0 +1,3 @@
+local HBurst = {}
+
+return HBurst

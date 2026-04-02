@@ -1,0 +1,11 @@
+local players = game:GetService('Players')
+local rs = game:GetService('ReplicatedStorage')
+local weaponModuldes = rs:WaitForChild("WeaponModules")
+
+players.PlayerAdded:Connect(function(player)
+	player.CharacterAppearanceLoaded:Connect(function(character)
+		local weapon_name = player:GetAttribute('WeaponName')
+		local weaponsModule = require(weaponModuldes:FindFirstChild(weapon_name))
+		weaponsModule.setup(player)	
+	end)
+end)
