@@ -1,5 +1,3 @@
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
 local player = game:GetService("Players"):WaitForChild(script:GetAttribute("Player")) or "None"
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -15,14 +13,10 @@ local stat = "None"
 local secondary = "None"
 local sideAffect = "None"
 local stored, ceiling, tool, on
-local floor = 0
 local mult_cap = 9
 local mult_floor = 1
 local mult = 1
 local LastPrint = 0
-
-local wasStoring = false
-local wasBurning = false
 
 local StatsFolder = game.ServerStorage.StatChanges:GetChildren()
 local statsModules = {}

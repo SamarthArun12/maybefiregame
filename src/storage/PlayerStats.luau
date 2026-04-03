@@ -79,14 +79,13 @@ function PlayerStats.refreshChange(player, statName, category, multChange, durat
 	end
 end
 
-function PlayerStats.SBChange(player, category, stat, change, toggle)
+function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end
-	for _, statsList in pairs(playerTable.activeChanges) do
-		for _, value in pairs(statsList) do
-			value.sb = 1
-		end
+	if isprimary then
+		PlayerStats.resetSB(player)
 	end
+	--print(string.format("player: %s | category: %s | stat: %s | change: %s | toggle: %s", tostring(player), tostring(category), tostring(stat), tostring(change), tostring(toggle)))
 	if toggle then
 		--print("toggle is true")
 		playerTable.activeChanges[category][stat].sb += (change)
@@ -103,6 +102,18 @@ function PlayerStats.resetSB(player)
 	end
 end
 
+function healthSBChange(statName, mult)
+	if statName ~= "MaxHealth" then return end
+	--print(mult)
+	if mult == 1 then return end
+
+	if mult < 1 then 
+		print("decrease health")
+	elseif mult > 1 then
+		print("increase health")
+	end
+end
+
 function PlayerStats.applyChanges(player)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end
@@ -111,12 +122,7 @@ function PlayerStats.applyChanges(player)
 		for statName, mult in pairs(statsList) do
 			local baseStat = baseStats[category][statName]
 			playerTable.statValues[category][statName] = baseStat * (mult.sb + mult.items - 1)
-			if mult.sb ~= 1 then
-				--print(mult.sb)
-			end
-			if mult.items ~= 1 then
-				--print(mult.items)
-			end
+			healthSBChange(statName, mult.sb)
 		end
 	end
 

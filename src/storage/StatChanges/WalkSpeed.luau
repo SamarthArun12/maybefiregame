@@ -11,9 +11,9 @@ function WSModule.change(humanoid, mult, primary, IncDec, toggle)
 		factor = -1
 	end
 	if primary == true then
-		playerStatsMS.SBChange(player, "humanoid_stats", "WalkSpeed", mult * 0.1 * factor, toggle)
+		playerStatsMS.SBChange(player, "humanoid_stats", "WalkSpeed", mult * 0.1 * factor, toggle, true)
 	else
-		playerStatsMS.SBChange(player, "humanoid_stats", "WalkSpeed", mult * 0.05 * factor, toggle)
+		playerStatsMS.SBChange(player, "humanoid_stats", "WalkSpeed", mult * 0.05 * factor, toggle, false)
 	end
 end
 

@@ -11,9 +11,9 @@ function DMModule.change(humanoid, mult, primary, IncDec, toggle)
 		factor = -1
 	end
 	if primary == true then
-		playerStatsMS.SBChange(player, "char_stats", "DamageMult", mult * 0.1 * factor, toggle)
+		playerStatsMS.SBChange(player, "char_stats", "DamageMult", mult * 0.1 * factor, toggle, true)
 	else
-		playerStatsMS.SBChange(player, "char_stats", "DamageMult", mult * 0.05 * factor, toggle)
+		playerStatsMS.SBChange(player, "char_stats", "DamageMult", mult * 0.05 * factor, toggle, false)
 	end
 end
 
