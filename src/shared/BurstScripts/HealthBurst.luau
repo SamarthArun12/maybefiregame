@@ -3,7 +3,7 @@ local HealthBurst = {}
 HealthBurst.name = "Health Burst"
 HealthBurst.cost = 30
 HealthBurst.cooldown = 0.5
-HealthBurst.stat = "Health"
+HealthBurst.stat = "MaxHealth"
 HealthBurst.animationId = "rbxassetid://139580504376878"
 
 function HealthBurst.clientChanges(character)

@@ -102,34 +102,33 @@ function PlayerStats.resetSB(player)
 	end
 end
 
-function healthSBChange(statName, mult)
+local function healthSBChange(statName, mult, humanoid)
 	if statName ~= "MaxHealth" then return end
 	--print(mult)
 	if mult == 1 then return end
 
-	if mult < 1 then 
-		print("decrease health")
-	elseif mult > 1 then
-		print("increase health")
-	end
+	mult = (mult - 1) * 10
+	local change = 0.05 * mult
+	humanoid.Health += change
+	print("health change by "..change)
 end
 
 function PlayerStats.applyChanges(player)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end
 
-	for category, statsList in pairs(playerTable.activeChanges) do
-		for statName, mult in pairs(statsList) do
-			local baseStat = baseStats[category][statName]
-			playerTable.statValues[category][statName] = baseStat * (mult.sb + mult.items - 1)
-			healthSBChange(statName, mult.sb)
-		end
-	end
-
 	local char = player.Character
 	if not char then return end
 	local humanoid = char:FindFirstChild("Humanoid")
 	if not humanoid then return end
+
+	for category, statsList in pairs(playerTable.activeChanges) do
+		for statName, mult in pairs(statsList) do
+			local baseStat = baseStats[category][statName]
+			playerTable.statValues[category][statName] = baseStat * (mult.sb + mult.items - 1)
+			healthSBChange(statName, mult.sb, humanoid)
+		end
+	end
 
 	for statName, value in pairs(playerTable.statValues.humanoid_stats) do
 		if statName ~= "None" then

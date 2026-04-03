@@ -51,7 +51,7 @@ function change_stats(humanoid, mode, mult, primary, secondary, side, toggle)
 end
 
 event.OnServerEvent:Connect(function(player, action, current, inMult, toggle, sorb)
-	if player == "None" then return end
+	if player == nil then return end
 
 	print("Received! " .. "Action: " .. tostring(action) .. ", Tool: " .. tostring(current) .. ", Mult: " .. tostring(inMult)  .. ", On/Off: " .. tostring(toggle))
 
@@ -95,15 +95,10 @@ event.OnServerEvent:Connect(function(player, action, current, inMult, toggle, so
 			end
 		end
 
-		wasStoring = storing
-		wasBurning = burning
-
 	else
 		stat = "None"
 		print("no changing aha")
 		print(current)
-		wasStoring = false
-		wasBurning = false
 	end
 
 end)
@@ -141,10 +136,8 @@ while true do
 
 		if storing and on == false then
 			print("Storing has ended!")
-			wasStoring = false
 		elseif burning and on == false then
 			print("Burning has ended!")
-			wasBurning = false
 		end
 
 
