@@ -56,6 +56,9 @@ function PlayerStats.addChange(player, statName, category, multChange, duration,
 	table.insert(playerTable.durations,{category, statName, multChange, endTime, false, changeName})
 end
 
+function PlayerStats.healthChange()
+end
+
 function PlayerStats.refreshChange(player, statName, category, multChange, duration, changeName)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end

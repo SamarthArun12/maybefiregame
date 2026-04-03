@@ -47,8 +47,8 @@ UIS.InputBegan:Connect(function(input, processed)
 		local equippedItem = playerItems[equippedSlot]
 		
 		if equippedItem:GetAttribute("PrimaryStat") ~= stat then 
-			print(equippedItem:GetAttribute("PrimaryStat"))
-			print(stat)
+			print("current:"..equippedItem:GetAttribute("PrimaryStat"))
+			print("required: "..stat)
 			return 
 		else
 			local stored = tonumber(equippedItem:GetAttribute("Stored"))

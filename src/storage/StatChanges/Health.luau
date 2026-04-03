@@ -7,7 +7,7 @@ function HModule.change(humanoid, mult, primary, IncDec)
 	end
 	local change = 0
 	if primary == true then
-		change = .05 * mault * factor
+		change = .05 * mult * factor
 	else
 		change = .025 * mult * factor
 	end

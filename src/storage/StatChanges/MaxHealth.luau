@@ -4,6 +4,7 @@ MHModule.base = 100
 
 local playerStatsMS = require(game.ServerStorage:WaitForChild("PlayerStats"))
 
+--maxhealth changes temp commented out for debugging
 function MHModule.change(humanoid, mult, primary, IncDec, toggle)
 	local factor = 1
 	local player = game.Players:GetPlayerFromCharacter(humanoid.Parent)
@@ -11,9 +12,9 @@ function MHModule.change(humanoid, mult, primary, IncDec, toggle)
 		factor = -1
 	end
 	if primary == true then
-		playerStatsMS.SBChange(player, "humanoid_stats", "MaxHealth", mult * 0.1 * factor, toggle)
+		--playerStatsMS.SBChange(player, "humanoid_stats", "MaxHealth", mult * 0.1 * factor, toggle)
 	else
-		playerStatsMS.SBChange(player, "humanoid_stats", "MaxHealth", mult * 0.05 * factor, toggle)
+		--playerStatsMS.SBChange(player, "humanoid_stats", "MaxHealth", mult * 0.05 * factor, toggle)
 	end
 end
 
