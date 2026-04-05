@@ -2,7 +2,7 @@ local EnemyAI = {}
 
 local playerService = game:GetService("Players")
 
---#region
+--#region Zone Nav
 EnemyAI.navigating = {}
 EnemyAI.targetZone = {}
 --determines wheter a position is in a zone, returns a bool
@@ -110,6 +110,7 @@ local function navToZone(enemyId, room, currentZone, targetZone)
 end
 --#endregion
 
+--#region Enemy Management (add/remove)
 EnemyAI.Enemies = {}
 
 local EnemyDefaults = {
@@ -140,8 +141,10 @@ end
 function EnemyAI.removeEnemy(enemyId)
 	EnemyAI.Enemies[enemyId] = nil
 end
+--#endregion
 
---contains the logic for a regular enemy
+--#region RegularEnemy AI
+--decides which reg enemy ai function to call
 function EnemyAI.RegularEnemy(enemyId)
 	local enemyModel = EnemyAI.Enemies[enemyId].model
 	local players = playerService:GetPlayers()
@@ -170,7 +173,6 @@ function EnemyAI.RegularEnemy(enemyId)
 		end
 	end
 end
-
 --regular enemy chases after the player mindlessly
 function EnemyAI.RegularEnemyChase(player, enemyId)
 	--print("regular enemy chasing")
@@ -180,6 +182,7 @@ function EnemyAI.RegularEnemyChase(player, enemyId)
 	local enemyHumanoid = enemyModel.Humanoid
 	enemyHumanoid:MoveTo(hrp.Position)
 end
+--#endregion
 
 --calls appropriate logic 
 function EnemyAI.updateEnemy(enemyId, enemyType)
