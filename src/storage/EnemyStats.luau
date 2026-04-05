@@ -1,3 +1,4 @@
+--EnemyStats module script, handles enemy stats
 local EnemyAI = require(game.ServerStorage.EnemyAI)
 
 local enemyStats = {}

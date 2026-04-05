@@ -1,3 +1,4 @@
+--EnemyAI MS, all info and functions to make enemy ai work
 local EnemyAI = {}
 
 local playerService = game:GetService("Players")
@@ -193,14 +194,23 @@ end
 --#region StealthEnemy AI
 local patrolling = {}
 local chasing = {}
+local lost = {}
 
 function EnemyAI.StealthEnemy(enemyId)
 	local currentState = getField(enemyId, "state")
 	local nearestPlayer = EnemyAI.nearestPlayerInLOS(enemyId)
-	if nearestPlayer ~= nil and currentState == "patrol" then
+	if nearestPlayer ~= nil then
 		changeField(enemyId, "state", "chase")
-		chasing[enemyId] = nearestPlayer
+		local pChar = nearestPlayer.Character
+		local pos = pChar.Position
+		chasing[enemyId] = {
+			player = nearestPlayer, 
+			lastSeen = pos
+		}
 	end
+
+	--incomplete, need to add a way to change to lost state and patrol from other states
+	--need to also make a task.spawn() thing for moving to last seen pos and use the lost table as a flag
 
 	currentState = getField(enemyId, "state")
 	if currentState == "patrol" then
@@ -214,6 +224,12 @@ function EnemyAI.StealthEnemy(enemyId)
 		patrolling[enemyId] = false
 		local target = chasing[enemyId]
 		EnemyAI.StealthEnemyChase(target, enemyId)
+	elseif currentState == "lost" then
+		patrolling[enemyId] = false
+		local lastSeenPos = chasing[enemyId].lastSeen
+		local enemyModel = getField(enemyId, "model")
+		local humanoid = enemyModel:FindFirstChild("Humanoid")
+		humanoid:MoveTo(lastSeenPos)
 	end
 end
 
@@ -226,6 +242,7 @@ function EnemyAI.StealthEnemyPatrol(enemyId)
 
 	EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 end
+
 --self explanatory
 function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 	local enemyModel = getField(enemyId, "model")
@@ -250,7 +267,6 @@ function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 		changeField(enemyId, "currentNode", current)
 	end
 end
-
 function EnemyAI.nearestPlayerInLOS(enemyId)
 	local enemyModel = getField(enemyId, "model")
 	local LineOfSight = enemyModel:FindFirstChild("LineOfSight")
@@ -291,7 +307,7 @@ function EnemyAI.nearestPlayerInLOS(enemyId)
 	return nearestPlayer
 end
 
---Enemy chases after player mindlessly
+--Enemy chases after player mindlessly 
 function EnemyAI.StealthEnemyChase(player, enemyId)
 	--print("stealth enemy chasing")
 	print(player)

@@ -1,3 +1,4 @@
+--enemy manager SS, calls enemy stats and enemy ai
 local RS = game:GetService("ReplicatedStorage")
 local event = RS.BindableEvents:WaitForChild("SpawnEnemy")
 local event2 = game.ReplicatedStorage.BindableEvents:WaitForChild("EnemyDeath")
@@ -25,7 +26,6 @@ event.Event:Connect(function(part, enemyName, id)
 	if enemyType == "StealthEnemy" then
 		enemyClone:SetAttribute("AssignedPath", "PatrolPath1")
 	end
-	EnemyId += 1
 	
 	--task.spawn stuff ai generated
 	enemyStats.newEnemy(EnemyId)
@@ -49,6 +49,7 @@ event.Event:Connect(function(part, enemyName, id)
 		end
 	end)
 	
+	EnemyId += 1
 	--print("Spawned enemy!")
 end)
 
