@@ -3,6 +3,10 @@ local EnemyAI = {}
 
 local playerService = game:GetService("Players")
 
+--REMEMBER TO GIT PUSH B4 DOING DEBUGGING
+
+--#region pointless region 
+
 --manages initalization of values, removal on death, etc
 --#region Enemy Management
 EnemyAI.Enemies = {}
@@ -352,5 +356,6 @@ end
 function EnemyAI.updateEnemy(enemyId, enemyType)
 	EnemyAI[enemyType](enemyId)
 end
+--#endregion
 
 return EnemyAI
