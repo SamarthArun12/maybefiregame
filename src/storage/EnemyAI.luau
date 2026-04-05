@@ -3,6 +3,7 @@ local EnemyAI = {}
 
 local playerService = game:GetService("Players")
 
+--manages initalization of values, removal on death, etc
 --#region Enemy Management
 EnemyAI.Enemies = {}
 local EnemyDefaults = {
@@ -11,8 +12,14 @@ local EnemyDefaults = {
 	},
 	StealthEnemy = {
 		model = nil,
+		--used for deciding which section to execute
 		state = "patrol",
-		currentNode = 1
+		--used for task.spawn flags
+		currentAction = "patrolling",
+		currentNode = 1,
+		targetPlayer = nil,
+		lastSeen = nil,
+		lastStateChange = nil,
 	}
 }
 
@@ -30,17 +37,20 @@ local function cloneTable(table)
 	return temp
 end
 function EnemyAI.newEnemy(enemyId, enemyModel, type)
-	print(type, EnemyDefaults[type])
 	local temp = cloneTable(EnemyDefaults[type])
 	temp.model = enemyModel
+	temp.lastStateChange = os.clock()
+	print(temp)
 
 	EnemyAI.Enemies[enemyId] = temp
+	
 end
 function EnemyAI.removeEnemy(enemyId)
 	EnemyAI.Enemies[enemyId] = nil
 end
 --#endregion
 
+--used by enemies that are always aware of player pos to nav to appropriate positions
 --#region Zone Nav
 EnemyAI.navigating = {}
 EnemyAI.targetZone = {}
@@ -149,6 +159,7 @@ local function navToZone(enemyId, room, currentZone, targetZone)
 end
 --#endregion
 
+--spawned in by spawners
 --#region RegularEnemy AI
 --decides which reg enemy ai function to call
 function EnemyAI.RegularEnemy(enemyId)
@@ -192,45 +203,13 @@ end
 
 --#enemy ai meant to have been hand placed, and assigned a patrol path by hand
 --#region StealthEnemy AI
-local patrolling = {}
-local chasing = {}
-local lost = {}
-
 function EnemyAI.StealthEnemy(enemyId)
+	--first section changes flags and values
+	EnemyAI.StealthEnemyUpdateFlags(enemyId)
+
+	--second section acts upon values n flags
 	local currentState = getField(enemyId, "state")
-	local nearestPlayer = EnemyAI.nearestPlayerInLOS(enemyId)
-	if nearestPlayer ~= nil then
-		changeField(enemyId, "state", "chase")
-		local pChar = nearestPlayer.Character
-		local pos = pChar.Position
-		chasing[enemyId] = {
-			player = nearestPlayer, 
-			lastSeen = pos
-		}
-	end
-
-	--incomplete, need to add a way to change to lost state and patrol from other states
-	--need to also make a task.spawn() thing for moving to last seen pos and use the lost table as a flag
-
-	currentState = getField(enemyId, "state")
-	if currentState == "patrol" then
-		if not patrolling[enemyId] then
-			task.spawn(function()
-				patrolling[enemyId] = true
-				EnemyAI.StealthEnemyPatrol(enemyId)
-			end)
-		end
-	elseif currentState == "chase" then
-		patrolling[enemyId] = false
-		local target = chasing[enemyId]
-		EnemyAI.StealthEnemyChase(target, enemyId)
-	elseif currentState == "lost" then
-		patrolling[enemyId] = false
-		local lastSeenPos = chasing[enemyId].lastSeen
-		local enemyModel = getField(enemyId, "model")
-		local humanoid = enemyModel:FindFirstChild("Humanoid")
-		humanoid:MoveTo(lastSeenPos)
-	end
+	EnemyAI.StealthEnemyAct(enemyId, currentState)
 end
 
 --Enemy follows patrol path
@@ -256,7 +235,7 @@ function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 	local increment = 1
 	
 	while current >= 1 and current <= #nodes do
-		if not patrolling[enemyId] then break end
+		if getField(enemyId, "currentAction") ~= "patrolling" then break end
 		local currentTarget = nodes[current]
 		humanoid:MoveTo(currentTarget.Position)
 		humanoid.MoveToFinished:Wait()
@@ -318,9 +297,58 @@ function EnemyAI.StealthEnemyChase(player, enemyId)
 	local enemyHumanoid = enemyModel.Humanoid
 	enemyHumanoid:MoveTo(hrp.Position)
 end
+
+--abstraction yay
+function EnemyAI.StealthEnemyUpdateFlags(enemyId)
+	local nearestPlayer = EnemyAI.nearestPlayerInLOS(enemyId)
+	--if there is a valid player in LOS
+	if nearestPlayer ~= nil then
+		changeField(enemyId, "state", "chase")
+		changeField(enemyId, "lastStateChange", os.clock())
+		changeField(enemyId, "targetPlayer", nearestPlayer)
+		local pChar = nearestPlayer.Character
+		local pos = pChar.Position
+		changeField(enemyId, "lastSeen", pos)
+
+	--executes if nearest player is nil, sends enemy into lost state (skipped if player isnt nil)
+	elseif getField(enemyId, "state") == "chase" then
+		changeField(enemyId, "state", "lost")
+		changeField(enemyId, "lastStateChange", os.clock())
+
+		changeField(enemyId, "targetPlayer", nil)
+	end
+end
+function EnemyAI.StealthEnemyAct(enemyId, state)
+	if state == "patrol" then
+		if getField(enemyId, "currentAction") ~= "patrolling" then
+			task.spawn(function()
+				changeField(enemyId, "currentAction", "patrolling")
+				EnemyAI.StealthEnemyPatrol(enemyId)
+			end)
+		end
+	elseif state == "chase" then
+		changeField(enemyId, "currentAction", "chasing")
+		local target = getField(enemyId, "targetPlayer")
+		EnemyAI.StealthEnemyChase(target, enemyId)
+	elseif state == "lost" then
+		local lastSeenPos = getField(enemyId, "lastSeen")
+		local enemyModel = getField(enemyId, "model")
+		local humanoid = enemyModel:FindFirstChild("Humanoid")
+		--makes sure not creating multiple coroutines
+		if getField(enemyId, "currentAction") ~= "searching" then
+			task.spawn(function()
+				changeField(enemyId, "currentAction", "searching")
+				while true do
+					humanoid:MoveTo(lastSeenPos)
+					if getField(enemyId, "state") ~= "lost" then break end
+				end
+			end)
+		end
+	end
+end
 --#endregion
 
---calls appropriate logic 
+--calls appropriate logic for an enemy based on its type
 function EnemyAI.updateEnemy(enemyId, enemyType)
 	EnemyAI[enemyType](enemyId)
 end
