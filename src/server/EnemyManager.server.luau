@@ -10,6 +10,7 @@ local EnemyId = 0
 event.Event:Connect(function(part, enemyName, id)
 	print("Received spawn event!")
 	local enemy = RS.Enemies:FindFirstChild(enemyName)
+	local type = enemyName
 	
 	local pos = part.Position + Vector3.new(0, 1, 0)
 	local enemyClone = enemy:Clone()
@@ -23,7 +24,7 @@ event.Event:Connect(function(part, enemyName, id)
 	
 	--task.spawn stuff ai generated
 	enemyStats.newEnemy(EnemyId)
-	EnemyAI.newEnemy(EnemyId, enemyClone)
+	EnemyAI.newEnemy(EnemyId, enemyClone, type)
 	enemyClone.Parent = workspace.AITestRoom
 	enemyClone:SetPrimaryPartCFrame(CFrame.new(pos))
 	
@@ -36,6 +37,7 @@ event.Event:Connect(function(part, enemyName, id)
 			EnemyAI.removeEnemy(capturedId)
 			event2:Fire(source)
 		end)
+		task.wait(1)
 		while enemyClone and humanoid.Health > 0 do
 			EnemyAI.updateEnemy(capturedId, capturedName)
 			task.wait(0.1)

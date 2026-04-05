@@ -2,6 +2,9 @@ local EnemyAI = {}
 
 local playerService = game:GetService("Players")
 
+--#region
+EnemyAI.navigating = {}
+EnemyAI.targetZone = {}
 --determines wheter a position is in a zone, returns a bool
 local function inZone(pos, zone)
 	local partPos = zone.CFrame:PointToObjectSpace(pos)
@@ -12,15 +15,15 @@ local function inZone(pos, zone)
 		return false
 	end
 end
-
 --returns the nearest player
-function nearestPlayer(enemyId, players)
-	local enemyModel = EnemyAI.Enemies[enemyId]
+local function nearestPlayer(enemyId, players)
+	local enemyModel = EnemyAI.Enemies[enemyId].model
 	local nearestP = nil
 	local nearestDist = math.huge
 	for i, player in pairs(players) do
 		if player.Character == nil then continue end
 		if player.Character:GetAttribute("Hidden") == true then continue end
+		--print(enemyId, EnemyAI.Enemies[enemyId])
 		local ePos = enemyModel.HumanoidRootPart.Position
 		local pPos = player.Character.HumanoidRootPart.Position
 		local diff = pPos - ePos
@@ -33,9 +36,8 @@ function nearestPlayer(enemyId, players)
 	end
 	return nearestP
 end
-
 --returns the zone the player and enemy are in
-function getZones(room, player, enemyModel)
+local function getZones(room, player, enemyModel)
 	local zones = room:FindFirstChild("Zones")
 	local enemyZone = nil
 	local playerZone = nil
@@ -47,6 +49,7 @@ function getZones(room, player, enemyModel)
 			enemyZone = zone
 		end
 	end
+	--replace with fixes later
 	if playerZone == nil then
 		--print("player is somewhere they aren't supposed to be...")
 	end
@@ -55,12 +58,11 @@ function getZones(room, player, enemyModel)
 	end
 	return playerZone, enemyZone
 end
-
 --enemy follows a nodepath
 --direction being true means follow path beginning to end, false means beginning to end
-function followPath(enemyId, nodePath, direction)
+local function followPath(enemyId, nodePath, direction)
 	--print("began following path")
-	local enemyModel = EnemyAI.Enemies[enemyId]
+	local enemyModel = EnemyAI.Enemies[enemyId].model
 	local humanoid = enemyModel.Humanoid
 	
 	local nodes = nodePath:GetChildren()
@@ -88,8 +90,7 @@ function followPath(enemyId, nodePath, direction)
 	EnemyAI.navigating[enemyId] = false
 	--print("reached end of path")
 end
-
-function navToZone(enemyId, room, currentZone, targetZone)
+local function navToZone(enemyId, room, currentZone, targetZone)
 	local nodePaths = room:FindFirstChild("NodePaths"):GetChildren()
 	local foundPath = false
 	for i, path in pairs(nodePaths) do
@@ -107,32 +108,43 @@ function navToZone(enemyId, room, currentZone, targetZone)
 		print("no path was found :<")
 	end
 end
+--#endregion
 
 EnemyAI.Enemies = {}
-EnemyAI.navigating = {}
-EnemyAI.targetZone = {}
 
-function EnemyAI.newEnemy(enemyId, enemyModel)
-	EnemyAI.Enemies[enemyId] = enemyModel
+local EnemyDefaults = {
+	RegularEnemy = {
+		model = nil,
+	},
+	StealthEnemy = {
+		model = nil,
+		state = "patrol"
+	}
+}
+
+local function cloneTable(table)
+	local temp = {}
+    for k, v in pairs(table) do
+        temp[k] = v
+    end
+	return temp
+end
+
+function EnemyAI.newEnemy(enemyId, enemyModel, type)
+	local temp = cloneTable(EnemyDefaults[type])
+	temp.model = enemyModel
+
+	EnemyAI.Enemies[enemyId] = temp
 end
 
 function EnemyAI.removeEnemy(enemyId)
 	EnemyAI.Enemies[enemyId] = nil
 end
 
---regular enemy chases after the player mindlessly
-function EnemyAI.RegularEnemyChase(player, enemyId)
-	--print("regular enemy chasing")
-	local character = player.Character
-	local hrp = character.HumanoidRootPart
-	local enemyModel = EnemyAI.Enemies[enemyId]
-	local enemyHumanoid = enemyModel.Humanoid
-	enemyHumanoid:MoveTo(hrp.Position)
-end
-
-function EnemyAI.updateEnemy(enemyId, enemyType)
+--contains the logic for a regular enemy
+function EnemyAI.RegularEnemy(enemyId)
+	local enemyModel = EnemyAI.Enemies[enemyId].model
 	local players = playerService:GetPlayers()
-	local enemyModel = EnemyAI.Enemies[enemyId]
 	
 	local nearest = nearestPlayer(enemyId, players)
 	if not nearest then return end
@@ -144,8 +156,7 @@ function EnemyAI.updateEnemy(enemyId, enemyType)
 	if playerZone == enemyZone then
 		--print("player and enemy "..enemyId.." are in the same zone")
 		EnemyAI.navigating[enemyId] = false
-		local funcName = enemyType.."Chase"
-		EnemyAI[funcName](nearest, enemyId)
+		EnemyAI.RegularEnemyChase(nearest, enemyId)
 	else
 		if EnemyAI.targetZone[enemyId] ~= playerZone then
 			EnemyAI.navigating[enemyId] = false
@@ -158,6 +169,21 @@ function EnemyAI.updateEnemy(enemyId, enemyType)
 			end)
 		end
 	end
+end
+
+--regular enemy chases after the player mindlessly
+function EnemyAI.RegularEnemyChase(player, enemyId)
+	--print("regular enemy chasing")
+	local character = player.Character
+	local hrp = character.HumanoidRootPart
+	local enemyModel = EnemyAI.Enemies[enemyId].model
+	local enemyHumanoid = enemyModel.Humanoid
+	enemyHumanoid:MoveTo(hrp.Position)
+end
+
+--calls appropriate logic 
+function EnemyAI.updateEnemy(enemyId, enemyType)
+	EnemyAI[enemyType](enemyId)
 end
 
 return EnemyAI

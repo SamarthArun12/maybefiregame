@@ -81,7 +81,7 @@ function enemyStats.applyChanges(enemyId)
 	if not enemyTable then return end
 	
 	local enemiesList = EnemyAI.Enemies
-	local character = enemiesList[enemyId]
+	local character = enemiesList[enemyId].model
 	if not character then return end
 	local humanoid = character.Humanoid
 	if not humanoid then return end
