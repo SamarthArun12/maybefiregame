@@ -1,6 +1,7 @@
 local EnemyAI = require(game.ServerStorage.EnemyAI)
 
 local enemyStats = {}
+--directly changed to cause permament buffs/debuffs to all enemies for rest of run
 local baseStats = {
 	HumanoidStats = {
 		MaxHealth = 100,
@@ -9,7 +10,8 @@ local baseStats = {
 		None = 0
 	},
 	CharacterStats = {
-		Damage = 10,
+		DamageMult = 1,
+		PatrolSpeed = 20,
 		None = 0
 	}
 }
@@ -23,7 +25,8 @@ local activeChangesTemplate = {
 		None = 1
 	},
 	CharacterStats = {
-		Damage = 1,
+		DamageMult = 1,
+		PatrolSpeed = 1,
 		None = 1
 	}
 }
