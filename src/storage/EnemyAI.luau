@@ -19,11 +19,12 @@ local EnemyDefaults = {
 		--used for deciding which section to execute
 		state = "patrol",
 		--used for task.spawn flags
-		currentAction = "patrolling",
+		currentAction = "idle",
 		currentNode = 1,
 		targetPlayer = nil,
 		lastSeen = nil,
 		lastStateChange = nil,
+		searchDuration = 2
 	}
 }
 
@@ -74,7 +75,7 @@ local function nearestPlayer(enemyId, players)
 	local nearestP = nil
 	local nearestDist = math.huge
 	for i, player in pairs(players) do
-		if player.Character == nil then continue end
+		if not player.Character then continue end
 		if player.Character:GetAttribute("Hidden") == true then continue end
 		--print(enemyId, EnemyAI.Enemies[enemyId])
 		local ePos = enemyModel.HumanoidRootPart.Position
@@ -95,6 +96,7 @@ local function getZones(room, player, enemyModel)
 	local enemyZone = nil
 	local playerZone = nil
 	for i, zone in pairs(zones:GetChildren()) do
+		if not player.Character then return end
 		if inZone(player.Character.HumanoidRootPart.Position, zone) then
 			playerZone = zone
 		end
@@ -198,6 +200,7 @@ end
 function EnemyAI.RegularEnemyChase(player, enemyId)
 	--print("regular enemy chasing")
 	local character = player.Character
+	if not character then return end
 	local hrp = character.HumanoidRootPart
 	local enemyModel = getField(enemyId, "model")
 	local enemyHumanoid = enemyModel.Humanoid
@@ -262,6 +265,14 @@ function EnemyAI.nearestPlayerInLOS(enemyId)
 	local nearestPlayer = nil
 	local nearestDist = math.huge
 
+	-- build filter once, excluding all enemies
+	local enemyModels = {enemyModel}
+	for id, data in pairs(EnemyAI.Enemies) do
+		if data.model then
+			table.insert(enemyModels, data.model)
+		end
+	end
+
 	for _, player in pairs(playerService:GetPlayers()) do
 		if not player.Character then continue end
 		local playerHRP = player.Character:FindFirstChild("HumanoidRootPart")
@@ -277,14 +288,22 @@ function EnemyAI.nearestPlayerInLOS(enemyId)
 		if angle > halfAngle then continue end
 
 		local rayParams = RaycastParams.new()
-		rayParams.FilterDescendantsInstances = {enemyModel, player.Character}
+		table.insert(enemyModels, player.Character)
+		rayParams.FilterDescendantsInstances = enemyModels
 		rayParams.FilterType = Enum.RaycastFilterType.Exclude
+
 		local result = workspace:Raycast(hrp.Position, toPlayer, rayParams)
 
-		if result == nil and distance < nearestDist then
+		-- also cast upward to catch players standing on top of enemy
+		local toPlayerUp = (playerHRP.Position + Vector3.new(0, 5, 0)) - hrp.Position
+		local resultUp = workspace:Raycast(hrp.Position, toPlayerUp, rayParams)
+
+		if (result == nil or resultUp == nil) and distance < nearestDist then
 			nearestDist = distance
 			nearestPlayer = player
 		end
+
+		table.remove(enemyModels, #enemyModels)
 	end
 
 	return nearestPlayer
@@ -293,12 +312,15 @@ end
 --Enemy chases after player mindlessly 
 function EnemyAI.StealthEnemyChase(player, enemyId)
 	--print("stealth enemy chasing")
-	print(player)
+
+	--print(player)
 	if player == nil then return end
 	local character = player.Character
+	if not character then return end
 	local hrp = character.HumanoidRootPart
 	local enemyModel = EnemyAI.Enemies[enemyId].model
 	local enemyHumanoid = enemyModel.Humanoid
+	changeField(enemyId, "lastSeen", hrp.Position)
 	enemyHumanoid:MoveTo(hrp.Position)
 end
 
@@ -311,11 +333,14 @@ function EnemyAI.StealthEnemyUpdateFlags(enemyId)
 		changeField(enemyId, "lastStateChange", os.clock())
 		changeField(enemyId, "targetPlayer", nearestPlayer)
 		local pChar = nearestPlayer.Character
-		local pos = pChar.Position
+		if not pChar then return end
+		local prhrp = pChar.HumanoidRootPart
+		local pos = prhrp.Position
 		changeField(enemyId, "lastSeen", pos)
 
 	--executes if nearest player is nil, sends enemy into lost state (skipped if player isnt nil)
 	elseif getField(enemyId, "state") == "chase" then
+		if os.clock() - getField(enemyId, "lastStateChange") < getField(enemyId, "searchDuration") then return end
 		changeField(enemyId, "state", "lost")
 		changeField(enemyId, "lastStateChange", os.clock())
 
@@ -324,6 +349,7 @@ function EnemyAI.StealthEnemyUpdateFlags(enemyId)
 end
 function EnemyAI.StealthEnemyAct(enemyId, state)
 	if state == "patrol" then
+		--print("patrolling")
 		if getField(enemyId, "currentAction") ~= "patrolling" then
 			task.spawn(function()
 				changeField(enemyId, "currentAction", "patrolling")
@@ -332,20 +358,27 @@ function EnemyAI.StealthEnemyAct(enemyId, state)
 		end
 	elseif state == "chase" then
 		changeField(enemyId, "currentAction", "chasing")
+		--print("in chase")
 		local target = getField(enemyId, "targetPlayer")
 		EnemyAI.StealthEnemyChase(target, enemyId)
 	elseif state == "lost" then
 		local lastSeenPos = getField(enemyId, "lastSeen")
 		local enemyModel = getField(enemyId, "model")
 		local humanoid = enemyModel:FindFirstChild("Humanoid")
+		local hrp = enemyModel:FindFirstChild("HumanoidRootPart")
 		--makes sure not creating multiple coroutines
 		if getField(enemyId, "currentAction") ~= "searching" then
 			task.spawn(function()
 				changeField(enemyId, "currentAction", "searching")
-				while true do
+				while getField(enemyId, "state") == "lost" do
+					--print(lastSeenPos)
 					humanoid:MoveTo(lastSeenPos)
-					if getField(enemyId, "state") ~= "lost" then break end
+					humanoid.MoveToFinished:Wait()
+					task.wait(1)
+					print("last seen pos reached")
+					if (hrp.Position - lastSeenPos).Magnitude < 10 then break end
 				end
+				changeField(enemyId, "state", "patrol")
 			end)
 		end
 	end
