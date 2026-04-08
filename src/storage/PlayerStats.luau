@@ -24,7 +24,8 @@ local activeChangesTemplate = {
 	char_stats = {
 		DamageMult = { items = 1, sb = 1 },
 		None = { items = 1, sb = 1 }
-	}
+	},
+	reqUpdate = false
 }
 
 --ai generated function
@@ -89,6 +90,7 @@ function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
 	if toggle then
 		--print("toggle is true")
 		playerTable.activeChanges[category][stat].sb += (change)
+		playerTable.activeChanges.reqUpdate = true
 	end
 end
 
@@ -116,6 +118,8 @@ end
 function PlayerStats.applyChanges(player)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end
+	if playerTable.activeChanges.reqUpdate == false then return end
+	playerTable.activeChanges.reqUpdate = false
 
 	local char = player.Character
 	if not char then return end
@@ -125,7 +129,8 @@ function PlayerStats.applyChanges(player)
 	for category, statsList in pairs(playerTable.activeChanges) do
 		for statName, mult in pairs(statsList) do
 			local baseStat = baseStats[category][statName]
-			playerTable.statValues[category][statName] = baseStat * (mult.sb + mult.items - 1)
+			local changeMult = mult.sb + mult.items - 1
+			playerTable.statValues[category][statName] = baseStat * changeMult
 			healthSBChange(statName, mult.sb, humanoid)
 		end
 	end
@@ -147,6 +152,7 @@ function PlayerStats.recalculateAC(player)
 	if not playerTable then return end
 
 	local now = os.clock()
+	local wasChanged = false
 
 	-- Remove expired durations, does in reverse order to avoid skipping
 	for i = #playerTable.durations, 1, -1 do
@@ -157,6 +163,7 @@ function PlayerStats.recalculateAC(player)
 			local mult = tuple[3]
 			playerTable.activeChanges[category][statName].items -= mult
 			table.remove(playerTable.durations, i)
+			wasChanged = true
 		end
 	end
 
@@ -169,9 +176,11 @@ function PlayerStats.recalculateAC(player)
 		if not applied then
 			playerTable.durations[index][5] = true
 			playerTable.activeChanges[category][statName].items += mult
+			wasChanged = true
 		end
 	end
-
+	
+	if wasChanged then playerTable.activeChanges.reqUpdate = true end
 	PlayerStats.applyChanges(player)
 end
 
