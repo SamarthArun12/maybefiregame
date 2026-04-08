@@ -104,6 +104,7 @@ function PlayerStats.resetSB(player)
 			value.sb = 1
 		end
 	end
+	playerTable.activeChanges.reqUpdate = true
 end
 
 local function healthSBChange(statName, mult, humanoid)
