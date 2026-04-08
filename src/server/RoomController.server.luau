@@ -1,3 +1,4 @@
+--very base version for testing features, nothing close to final
 local event = game.ReplicatedStorage.BindableEvents:WaitForChild("RoomChange")
 local currentRoom = game.Workspace:WaitForChild("Room1")
 local currentModule = require(currentRoom:FindFirstChild("ModuleScript"))
@@ -19,6 +20,7 @@ event.Event:Connect(function(roomName)
 	runModules(currentModule)
 end)
 
+--ignore the red underline, it works, VS code just thinks it doesnt
 local testRoom = game.Workspace:WaitForChild("LongRoom")
 local testModule = require(testRoom:WaitForChild("ModuleScript"))
 testModule.Environment()

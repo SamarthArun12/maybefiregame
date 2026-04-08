@@ -29,7 +29,8 @@ local activeChangesTemplate = {
 		DamageMult = 1,
 		PatrolSpeed = 1,
 		None = 1
-	}
+	},
+	reqUpdate = false
 }
 
 
@@ -83,6 +84,8 @@ end
 function enemyStats.applyChanges(enemyId)
 	local enemyTable = enemyStats[enemyId]
 	if not enemyTable then return end
+	if enemyTable.activeChanges.reqUpdate == false then return end
+	enemyTable.activeChanges.reqUpdate = false
 	
 	local enemiesList = EnemyAI.Enemies
 	local character = enemiesList[enemyId].model
@@ -91,6 +94,7 @@ function enemyStats.applyChanges(enemyId)
 	if not humanoid then return end
 	
 	for category, statsList in pairs(enemyTable.activeChanges) do
+		if type(statsList) == "boolean" then continue end
 		for statName, mult in pairs(statsList) do
 			local baseStat = baseStats[category][statName]
 			enemyTable.statValues[category][statName] = baseStat * mult
@@ -128,6 +132,7 @@ function enemyStats.recalculateAC(enemyId)
 			local mult = tuple[3]
 			enemyTable.activeChanges[category][statName] -= mult
 			table.remove(enemyTable.durations, i)
+			enemyTable.activeChanges.reqUpdate = true
 		end
 	end
 	for index, tuple in ipairs(enemyTable.durations) do
@@ -138,6 +143,7 @@ function enemyStats.recalculateAC(enemyId)
 		if not applied then
 			enemyTable.durations[index][5] = true
 			enemyTable.activeChanges[category][statName] += mult
+			enemyTable.activeChanges.reqUpdate = true
 		end
 	end
 	

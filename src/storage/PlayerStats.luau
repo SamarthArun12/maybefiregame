@@ -98,6 +98,8 @@ function PlayerStats.resetSB(player)
 	local playerTable = PlayerStats[player]
 	if not playerTable then return end
 	for _, statsList in pairs(playerTable.activeChanges) do
+		--account for reqUpdate bool
+		if type(statsList) == "boolean" then continue end
 		for _, value in pairs(statsList) do
 			value.sb = 1
 		end
@@ -127,6 +129,7 @@ function PlayerStats.applyChanges(player)
 	if not humanoid then return end
 
 	for category, statsList in pairs(playerTable.activeChanges) do
+		if type(statsList) == "boolean" then continue end
 		for statName, mult in pairs(statsList) do
 			local baseStat = baseStats[category][statName]
 			local changeMult = mult.sb + mult.items - 1

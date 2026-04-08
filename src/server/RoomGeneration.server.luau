@@ -1,3 +1,4 @@
+--very base version for testing features, nothing close to final
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local roomFolder = ReplicatedStorage:WaitForChild("Rooms")
 local tpScript = game:GetService("ServerStorage"):WaitForChild("TeleportScript")

@@ -2,15 +2,6 @@ local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 player.CharacterAdded:Connect(function(char)character = char end)
-local humanoidRoot = character:WaitForChild("HumanoidRootPart")
-
-local event = game.ReplicatedStorage.RemoteEvents:WaitForChild("BurstTechActivate")
-local burstScripts = game.ReplicatedStorage:WaitForChild("BurstScripts")
-local burstScript = require(burstScripts:WaitForChild(player:GetAttribute("BurstTech")))
-local cooldownTime = burstScript.cooldown
-local lastAttackTime = 0
-local cost = burstScript.cost
-local stat = burstScript.stat
 
 task.wait(0.25)
 local playerItems = game:GetService("StarterPack"):GetChildren()
@@ -31,9 +22,17 @@ player:GetAttributeChangedSignal("CanPlay"):Connect(function()
 	canPlay = player:GetAttribute("CanPlay")
 end)
 
+--make sure cost + cd are server validated b4 publish
 UIS.InputBegan:Connect(function(input, processed)
 	if processed then return end
 	if not canPlay then return end
+	local event = game.ReplicatedStorage.RemoteEvents:WaitForChild("BurstTechActivate")
+	local burstScripts = game.ReplicatedStorage:WaitForChild("BurstScripts")
+	local burstScript = require(burstScripts:WaitForChild(player:GetAttribute("BurstTech")))
+	local cooldownTime = burstScript.cooldown
+	local lastAttackTime = 0
+	local cost = burstScript.cost
+	local stat = burstScript.stat
 	
 	if input.KeyCode == Enum.KeyCode.Q  then
 		local currentTime = os.clock()
@@ -59,11 +58,10 @@ UIS.InputBegan:Connect(function(input, processed)
 
 				lastAttackTime = currentTime
 				
-				local pos = humanoidRoot.CFrame
 				burstScript.clientChanges(character)
 				
 				local BurstTech = player:GetAttribute("BurstTech")
-				event:FireServer(current, pos)
+				event:FireServer(current)
 				print("Sent burst! Tech name: " .. tostring(BurstTech) .. ", From: " .. tostring(player))
 				task.delay(cooldownTime, function()
 				end)
