@@ -70,10 +70,12 @@ event.OnServerEvent:Connect(function(player, action, current, inMult, toggle, so
 		if action == "storing" then
 			change_stats(humanoid, "store", mult, stat, secondary, sideAffect, toggle)
 			storing = toggle
+			burning = false
 
 		elseif action == "burning" then
 			change_stats(humanoid, "burn", mult, stat, secondary, sideAffect, toggle)
 			burning = toggle
+			storing = false
 
 		elseif action == "mult change" then
 			mult = inMult and mult + 1 or mult - 1

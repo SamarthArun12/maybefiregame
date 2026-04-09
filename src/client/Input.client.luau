@@ -54,9 +54,11 @@ UIS.InputBegan:Connect(function(input, processed)
 		action = "storing"
 		if storing == true then
 			storing = false
+			burning = false
 			toggle = false
 		else
 			storing = true
+			burning = false
 			toggle = true
 		end
 		send = true
@@ -66,9 +68,11 @@ UIS.InputBegan:Connect(function(input, processed)
 		action = "burning"
 		if burning == true then
 			burning = false
+			storing = false
 			toggle = false
 		else
 			burning = true
+			storing = false
 			toggle = true
 		end
 		send = true
