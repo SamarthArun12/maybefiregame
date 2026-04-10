@@ -1,6 +1,11 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local players = game:GetService("Players")
 local RE = game.ReplicatedStorage.RemoteEvents:WaitForChild("SetAttributes")
 local TemplateACS = game.ServerStorage:WaitForChild("AttributeChangeSystem")
+local playerItems = game:GetService("StarterPack"):GetChildren()
+table.sort(playerItems, function(a, b)
+	return a.Name < b.Name
+end)
 
 players.PlayerAdded:Connect(function(player)
 	--Stuff that stays when death
@@ -24,5 +29,15 @@ RE.OnServerEvent:Connect(function(player)
 	local acs = TemplateACS:Clone()
 	acs:SetAttribute("Player", player.Name)
 	acs.Parent = game:GetService("ServerScriptService")
+
+	local folderName = player.Name.."Folder"
+	local folder = Instance.new("Folder")
+	folder.Name = folderName
+	folder.Parent = ReplicatedStorage.PlayerFolders
+	--update later to be just what stuff player has last used
+	for i, item in ipairs(playerItems) do
+		local clone = item:Clone()
+		clone.Parent = folder
+	end
 end)
 

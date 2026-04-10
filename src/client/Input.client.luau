@@ -4,14 +4,17 @@ local character = player.Character or player.CharacterAdded:Wait()
 player.CharacterAdded:Connect(function(char)character = char end)
 local event = game.ReplicatedStorage.RemoteEvents:WaitForChild("StoreBurnInput")
 local event2 = game.ReplicatedStorage.RemoteEvents:WaitForChild("EquippedChanged")
-local event3 = game.ReplicatedStorage.BindableEvents:WaitForChild("StoreBurnActivate")
+local event3 = game.ReplicatedStorage.BindableEvents:WaitForChild("StoredBarUpdate")
 
-task.wait(0.25)
-local playerItems = game:GetService("StarterPack"):GetChildren()
---Lines 11-13 AI generated
-table.sort(playerItems, function(a, b)
-	return a.Name < b.Name
-end)
+local canPlay = player:GetAttribute("CanPlay")
+while not canPlay do
+	task.wait(0.1)
+	canPlay = player:GetAttribute("CanPlay")
+end
+
+local folderName = player.Name.."Folder"
+local folder = game.ReplicatedStorage.PlayerFolders:WaitForChild(folderName)
+local playerItems = folder:GetChildren()
 for i, v in ipairs(playerItems) do
 	if v:IsA("Tool") then
 		v:SetAttribute("HotbarSlot", i)
@@ -28,8 +31,6 @@ local action = nil
 local send = false
 
 local toggle = false
-
-local canPlay = player:GetAttribute("CanPlay")
 
 player:GetAttributeChangedSignal("CanPlay"):Connect(function()
 	canPlay = player:GetAttribute("CanPlay")
@@ -126,7 +127,7 @@ UIS.InputBegan:Connect(function(input, processed)
 	--Fire info
 	if send == true then
 		event:FireServer(action, current, mult_inc, toggle, sorb)
-		event3:Fire(player, current)
+		event3:Fire(current)
 		send = false
 		--Print is ai generated
 		print("Sent! " .. "Action: " .. tostring(action) .. ", Tool: " .. tostring(current) .. ", MultChange: " .. tostring(mult_inc) .. ", On/Off: " .. tostring(toggle) .. ", SorB: " .. tostring(sorb))

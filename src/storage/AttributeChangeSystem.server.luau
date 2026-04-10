@@ -154,7 +154,7 @@ while true do
 end
 
 game.Players.PlayerRemoving:Connect(function(plr)
-	if plr == player and player ~= "None" then
+	if plr == player then
 		script:Destroy()
 	end
 end)

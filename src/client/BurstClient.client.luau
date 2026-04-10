@@ -3,11 +3,14 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 player.CharacterAdded:Connect(function(char)character = char end)
 
-task.wait(0.25)
-local playerItems = game:GetService("StarterPack"):GetChildren()
-table.sort(playerItems, function(a, b)
-	return a.Name < b.Name
-end)
+local canPlay = player:GetAttribute("CanPlay")
+while not canPlay do
+	task.wait(0.1)
+	canPlay = player:GetAttribute("CanPlay")
+end
+local folderName = player.Name.."Folder"
+local folder = game.ReplicatedStorage.PlayerFolders:WaitForChild(folderName)
+local playerItems = folder:GetChildren()
 for i, v in ipairs(playerItems) do
 	if v:IsA("Tool") then
 		v:SetAttribute("HotbarSlot", i)
@@ -15,8 +18,6 @@ for i, v in ipairs(playerItems) do
 end
 
 local current = "None"
-
-local canPlay = player:GetAttribute("CanPlay")
 
 player:GetAttributeChangedSignal("CanPlay"):Connect(function()
 	canPlay = player:GetAttribute("CanPlay")
