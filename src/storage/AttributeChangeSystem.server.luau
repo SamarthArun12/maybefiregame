@@ -53,6 +53,13 @@ end
 event.OnServerEvent:Connect(function(player, action, current, inMult, toggle, sorb)
 	if player == nil then return end
 
+	--make sure the player acc has this tool
+	local folderName = player.Name.."Folder"
+	local playerFolder = game.ReplicatedStorage.PlayerFolders:FindFirstChild(folderName)
+	if not playerFolder then return end
+	local confirmation = playerFolder:FindFirstChild(current)
+	if confirmation == nil then return end
+
 	print("Received! " .. "Action: " .. tostring(action) .. ", Tool: " .. tostring(current) .. ", Mult: " .. tostring(inMult)  .. ", On/Off: " .. tostring(toggle))
 
 	if current ~= "None" then
