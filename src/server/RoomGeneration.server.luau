@@ -22,6 +22,7 @@ for i = 1, roomNum do
 		teleporter:SetAttribute("Enabled", true)
 		if i % 5 == 0 then
 			room:SetAttribute("RewardRoom", true)
+			print("room #"..roomNum.." is a reward room")
 		else
 			room:SetAttribute("RewardRoom", false)
 		end

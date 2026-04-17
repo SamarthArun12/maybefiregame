@@ -253,6 +253,7 @@ function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 		changeField(enemyId, "currentNode", current)
 	end
 end
+
 function EnemyAI.nearestPlayerInLOS(enemyId)
 	local enemyModel = getField(enemyId, "model")
 	local LineOfSight = enemyModel:FindFirstChild("LineOfSight")

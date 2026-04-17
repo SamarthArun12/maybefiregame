@@ -41,6 +41,16 @@ local function deepClone(t)
 	return clone
 end
 
+function PlayerStats.permChange(category, stat, percentChange)
+	for item, v in pairs(PlayerStats) do
+		if typeof(item) == "Instance" and item:IsA("Player") then
+			local playerTable = PlayerStats[item]
+			playerTable[category][stat].items += (percentChange/100)
+			print("permChange done")
+		end
+	end
+end
+
 function PlayerStats.newPlayer(player)
 	PlayerStats[player] = {
 		statValues = deepClone(baseStats),

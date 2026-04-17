@@ -28,7 +28,6 @@
       "$ignoreUnknownInstances": true
       }
     },
-
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true

@@ -57,7 +57,7 @@ event.OnServerEvent:Connect(function(player, action, current, inMult, toggle, so
 	local folderName = player.Name.."Folder"
 	local playerFolder = game.ReplicatedStorage.PlayerFolders:FindFirstChild(folderName)
 	if not playerFolder then return end
-	local confirmation = playerFolder:FindFirstChild(current)
+	local confirmation = playerFolder:FindFirstChild(current.Name)
 	if confirmation == nil then return end
 
 	print("Received! " .. "Action: " .. tostring(action) .. ", Tool: " .. tostring(current) .. ", Mult: " .. tostring(inMult)  .. ", On/Off: " .. tostring(toggle))

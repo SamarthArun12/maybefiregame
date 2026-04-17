@@ -46,8 +46,12 @@ local function deepClone(t)
 	return clone
 end
 
+function enemyStats.PermChange(category, stat, percentChange)
+	activeChangesTemplate[category][stat] += (percentChange)/100
+end
 
 function enemyStats.newEnemy(enemyId)
+	print("new enemy #"..enemyId)
 	enemyStats[enemyId] = {
 		statValues = deepClone(baseStats),
 		activeChanges = deepClone(activeChangesTemplate),

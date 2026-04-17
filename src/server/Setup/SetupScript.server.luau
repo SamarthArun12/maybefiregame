@@ -14,6 +14,7 @@ players.PlayerAdded:Connect(function(player)
 	player:SetAttribute("EquippedSlot", 1)
 	player:SetAttribute("BurstTech", "HealthBurst")
 	player:SetAttribute("Equipped", "Offhand")
+	player:SetAttribute("numRewards", 3)
 	player:SetAttribute("CanPlay", false)
 end)
 
