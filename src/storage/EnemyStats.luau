@@ -30,7 +30,7 @@ local activeChangesTemplate = {
 		PatrolSpeed = 1,
 		None = 1
 	},
-	reqUpdate = false
+	reqUpdate = true
 }
 
 
@@ -87,7 +87,7 @@ end
 
 function enemyStats.applyChanges(enemyId)
 	local enemyTable = enemyStats[enemyId]
-	if not enemyTable then return end
+	if not enemyTable then end
 	if enemyTable.activeChanges.reqUpdate == false then return end
 	enemyTable.activeChanges.reqUpdate = false
 	
@@ -97,6 +97,8 @@ function enemyStats.applyChanges(enemyId)
 	local humanoid = character.Humanoid
 	if not humanoid then return end
 	
+	print("passed checks")
+
 	for category, statsList in pairs(enemyTable.activeChanges) do
 		if type(statsList) == "boolean" then continue end
 		for statName, mult in pairs(statsList) do

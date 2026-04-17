@@ -29,9 +29,11 @@ local EnemyDefaults = {
 }
 
 local function getField(enemyId, fieldName)
+	if not EnemyAI.Enemies[enemyId] then return nil end
 	return EnemyAI.Enemies[enemyId][fieldName]
 end
 local function changeField(enemyId, fieldName, change)
+	if not EnemyAI.Enemies[enemyId] then return end
 	EnemyAI.Enemies[enemyId][fieldName] = change
 end
 local function cloneTable(table)
@@ -72,6 +74,7 @@ end
 --returns the nearest player
 local function nearestPlayer(enemyId, players)
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local nearestP = nil
 	local nearestDist = math.huge
 	for i, player in pairs(players) do
@@ -118,6 +121,7 @@ end
 local function followPath(enemyId, nodePath, direction)
 	--print("began following path")
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local humanoid = enemyModel.Humanoid
 	
 	local nodes = nodePath:GetChildren()
@@ -170,6 +174,7 @@ end
 --decides which reg enemy ai function to call
 function EnemyAI.RegularEnemy(enemyId)
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local players = playerService:GetPlayers()
 	
 	local nearest = nearestPlayer(enemyId, players)
@@ -203,6 +208,7 @@ function EnemyAI.RegularEnemyChase(player, enemyId)
 	if not character then return end
 	local hrp = character.HumanoidRootPart
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local enemyHumanoid = enemyModel.Humanoid
 	enemyHumanoid:MoveTo(hrp.Position)
 end
@@ -216,12 +222,14 @@ function EnemyAI.StealthEnemy(enemyId)
 
 	--second section acts upon values n flags
 	local currentState = getField(enemyId, "state")
+	if not currentState then return end
 	EnemyAI.StealthEnemyAct(enemyId, currentState)
 end
 
 --Enemy follows patrol path
 function EnemyAI.StealthEnemyPatrol(enemyId)
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local pathName = enemyModel:GetAttribute("AssignedPath")
 	local room = enemyModel.Parent
 	local path = room.PatrolPaths:FindFirstChild(pathName)
@@ -232,6 +240,7 @@ end
 --self explanatory
 function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local humanoid = enemyModel:FindFirstChild("Humanoid")
 	local nodes = path:GetChildren()
 	table.sort(nodes, function(a, b)
@@ -239,6 +248,7 @@ function EnemyAI.StealthEnemyFollowPatrol(enemyId, path)
 	end)
 	
 	local current = getField(enemyId, "currentNode")
+	if not current then return end
 	local increment = 1
 	
 	while current >= 1 and current <= #nodes do
@@ -256,6 +266,7 @@ end
 
 function EnemyAI.nearestPlayerInLOS(enemyId)
 	local enemyModel = getField(enemyId, "model")
+	if not enemyModel then return end
 	local LineOfSight = enemyModel:FindFirstChild("LineOfSight")
 	if not LineOfSight then return nil end
 
@@ -361,10 +372,13 @@ function EnemyAI.StealthEnemyAct(enemyId, state)
 		changeField(enemyId, "currentAction", "chasing")
 		--print("in chase")
 		local target = getField(enemyId, "targetPlayer")
+		if not target then return end
 		EnemyAI.StealthEnemyChase(target, enemyId)
 	elseif state == "lost" then
 		local lastSeenPos = getField(enemyId, "lastSeen")
+		if not lastSeenPos then return end
 		local enemyModel = getField(enemyId, "model")
+		if not enemyModel then return end
 		local humanoid = enemyModel:FindFirstChild("Humanoid")
 		local hrp = enemyModel:FindFirstChild("HumanoidRootPart")
 		--makes sure not creating multiple coroutines
