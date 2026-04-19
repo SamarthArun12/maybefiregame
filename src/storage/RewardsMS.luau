@@ -1,5 +1,7 @@
 Rewards = {}
 local RS = game.ReplicatedStorage
+local SolidModelContentProvider = game:GetService("SolidModelContentProvider")
+local players = game:GetService("Players")
 local remote = game.ReplicatedStorage.RemoteEvents:FindFirstChild("DisplayRewards")
 
 --inflated values to make testing easier
@@ -59,10 +61,21 @@ local trialsTable = {
 function pickRandom()
     local selectedPairs = {}
 
-    for i = 1, Rewards.numRewards do
+    local numRewards = 0
+    while numRewards < Rewards.numRewards do
         local selectedReward = rewardsTable[math.random(1, #rewardsTable)]
         local selectedTrial = trialsTable[math.random(1, #trialsTable)]
-        table.insert(selectedPairs, {selectedReward, selectedTrial})
+        local pair = {selectedReward, selectedTrial}
+        local dupeFound = false
+        for _, tuple in ipairs(selectedPairs) do
+            if tuple[1].Name == selectedReward.Name then
+                dupeFound = true
+                break
+            end
+        end
+        if dupeFound then continue end
+        table.insert(selectedPairs, pair)
+        numRewards += 1
     end
     return selectedPairs
 end
@@ -98,12 +111,15 @@ end
 function Rewards.ShowRewards()
     print("Showing rewards")
 
-    local pairsTable = pickRandom()
-    remote:Fire(pairsTable)
-    for index, pair in ipairs(pairsTable) do
-        local rewardName = pair[1].Name
-        local trialName = pair[2].Name
-        print("Pair #"..tostring(index)..": ".." Reward: ".. rewardName.." Trial: "..trialName)
+    for _, player in ipairs(players:GetPlayers()) do
+        print(player)
+        local pairsTable = pickRandom()
+        remote:FireClient(player, pairsTable)
+        for index, pair in ipairs(pairsTable) do
+            local rewardName = pair[1].Name
+            local trialName = pair[2].Name
+            print("Pair #"..tostring(index)..": ".." Reward: ".. rewardName.." Trial: "..trialName)
+        end
     end
     
 end

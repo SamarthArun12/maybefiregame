@@ -5,6 +5,7 @@ local tpScript = game:GetService("ServerStorage"):WaitForChild("TeleportScript")
 local roomNum = 10
 
 --will need to rework this entire thing so that only 2-3 rooms exist at once
+local rewardRooms = {}
 for i = 1, roomNum do
 	local randomNum = math.random(1, #roomFolder:GetChildren())
 	local room = roomFolder:GetChildren()[randomNum]:Clone()
@@ -20,12 +21,15 @@ for i = 1, roomNum do
 		targetRoomName = "Room" .. tostring(i + 1)
 		teleporter:SetAttribute("Target", targetRoomName)
 		teleporter:SetAttribute("Enabled", true)
-		if i % 5 == 0 then
+		if i % 1 == 0 then
 			room:SetAttribute("RewardRoom", true)
-			print("room #"..roomNum.." is a reward room")
+			table.insert(rewardRooms, i)
 		else
 			room:SetAttribute("RewardRoom", false)
 		end
 	end
-	
+end
+
+for index, value in ipairs(rewardRooms) do
+	print("Room #"..value.." is a reward room")
 end
