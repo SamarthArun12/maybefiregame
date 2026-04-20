@@ -1,6 +1,5 @@
 Rewards = {}
 local RS = game.ReplicatedStorage
-local SolidModelContentProvider = game:GetService("SolidModelContentProvider")
 local players = game:GetService("Players")
 local remote = game.ReplicatedStorage.RemoteEvents:FindFirstChild("DisplayRewards")
 
@@ -111,6 +110,7 @@ end
 function Rewards.ShowRewards()
     print("Showing rewards")
 
+    --later add teleport to physical room
     for _, player in ipairs(players:GetPlayers()) do
         print(player)
         local pairsTable = pickRandom()

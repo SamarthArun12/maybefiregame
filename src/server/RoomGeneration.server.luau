@@ -1,5 +1,6 @@
 --very base version for testing features, nothing close to final
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local roomChange = game.ReplicatedStorage:FindFirstChild("BindableEvents"):FindFirstChild("RoomChange")
 local roomFolder = ReplicatedStorage:WaitForChild("Rooms")
 local tpScript = game:GetService("ServerStorage"):WaitForChild("TeleportScript")
 local roomNum = 10
@@ -33,3 +34,7 @@ end
 for index, value in ipairs(rewardRooms) do
 	print("Room #"..value.." is a reward room")
 end
+
+roomChange.Event:Connect(function()
+	print("need make new room")
+end)
