@@ -6,7 +6,7 @@ local enemyStats = {}
 local baseStats = {
 	HumanoidStats = {
 		MaxHealth = 100,
-		WalkSpeed = 50,
+		WalkSpeed = 30,
 		JumpPower = 50,
 		None = 0
 	},
