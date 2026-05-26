@@ -28,19 +28,21 @@ local activeChangesTemplate = {
 	reqUpdate = false
 }
 
---ai generated function
-local function deepClone(t)
+local function deepClone(table)
 	local clone = {}
-	for k, v in pairs(t) do
-		if type(v) == "table" then
-			clone[k] = deepClone(v)
+	for key, value in pairs(table) do
+		if type(value) == "table" then
+			clone[key] = deepClone(value)
 		else
-			clone[k] = v
+			clone[key] = value
 		end
 	end
 	return clone
 end
 
+PlayerStats.Players = {}
+
+--fix this this to use PlayerStats.Players
 function PlayerStats.permChange(category, stat, percentChange)
 	for item, v in pairs(PlayerStats) do
 		if typeof(item) == "Instance" and item:IsA("Player") then
@@ -51,27 +53,27 @@ function PlayerStats.permChange(category, stat, percentChange)
 	end
 end
 
+--handles new players and cleaning up old players.
 function PlayerStats.newPlayer(player)
-	PlayerStats[player] = {
+	PlayerStats.Players[player] = {
 		statValues = deepClone(baseStats),
 		activeChanges = deepClone(activeChangesTemplate),
 		durations = {},
 	}
 end
+function PlayerStats.cleanup(player)
+	PlayerStats.Players[player] = nil
+end
 
 function PlayerStats.addChange(player, statName, category, multChange, duration, changeName)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 
 	local endTime = os.clock() + duration
 	table.insert(playerTable.durations,{category, statName, multChange, endTime, false, changeName})
 end
-
-function PlayerStats.healthChange()
-end
-
 function PlayerStats.refreshChange(player, statName, category, multChange, duration, changeName)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 	
 	local found = false
@@ -90,8 +92,9 @@ function PlayerStats.refreshChange(player, statName, category, multChange, durat
 	end
 end
 
+
 function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 	if isprimary then
 		PlayerStats.resetSB(player)
@@ -103,9 +106,8 @@ function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
 		playerTable.activeChanges.reqUpdate = true
 	end
 end
-
 function PlayerStats.resetSB(player)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 	for _, statsList in pairs(playerTable.activeChanges) do
 		--account for reqUpdate bool
@@ -116,7 +118,6 @@ function PlayerStats.resetSB(player)
 	end
 	playerTable.activeChanges.reqUpdate = true
 end
-
 local function healthSBChange(statName, mult, humanoid)
 	if statName ~= "MaxHealth" then return end
 	--print(mult)
@@ -129,7 +130,7 @@ local function healthSBChange(statName, mult, humanoid)
 end
 
 function PlayerStats.applyChanges(player)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 	if playerTable.activeChanges.reqUpdate == false then return end
 	playerTable.activeChanges.reqUpdate = false
@@ -160,9 +161,8 @@ function PlayerStats.applyChanges(player)
 		end
 	end
 end
-
 function PlayerStats.recalculateAC(player)
-	local playerTable = PlayerStats[player]
+	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 
 	local now = os.clock()
@@ -198,8 +198,5 @@ function PlayerStats.recalculateAC(player)
 	PlayerStats.applyChanges(player)
 end
 
-function PlayerStats.cleanup(player)
-	PlayerStats[player] = nil
-end
 
 return PlayerStats

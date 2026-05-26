@@ -11,9 +11,12 @@ local EnemyId = 0
 event.Event:Connect(function(part, enemyName, id)
 	print("Received spawn event!")
 	local enemy = RS.Enemies:FindFirstChild(enemyName)
+	local capturedId = EnemyId
+	EnemyId += 1
 	print(enemyName)
 	if not enemy then return end
 	local enemyType = enemy:GetAttribute("Type")
+	local capturedType = enemyType
 	
 	local pos = part.Position + Vector3.new(0, 1, 0)
 	local enemyClone = enemy:Clone()
@@ -21,20 +24,18 @@ event.Event:Connect(function(part, enemyName, id)
 	--print(enemyClone:GetAttributes())
 	
 	enemyClone:SetAttribute("SourceId", id)
-	enemyClone:SetAttribute("EnemyId", EnemyId)
+	enemyClone:SetAttribute("EnemyId", capturedId)
 	enemyClone:SetAttribute("Affiliation", "Enemy")
 	if enemyType == "StealthEnemy" then
 		enemyClone:SetAttribute("AssignedPath", "PatrolPath1")
 	end
 	
 	--task.spawn stuff ai generated
-	enemyStats.newEnemy(EnemyId)
-	EnemyAI.newEnemy(EnemyId, enemyClone, enemyType)
+	enemyStats.newEnemy(capturedId)
+	EnemyAI.newEnemy(capturedId, enemyClone, enemyType)
 	enemyClone.Parent = workspace.AITestRoom
 	enemyClone:SetPrimaryPartCFrame(CFrame.new(pos))
 	
-	local capturedId = EnemyId
-	local capturedType = enemyType
 	local source = id
 	task.spawn(function()
 		local humanoid = enemyClone:FindFirstChild("Humanoid")
@@ -45,11 +46,9 @@ event.Event:Connect(function(part, enemyName, id)
 		task.wait(1)
 		while enemyClone and humanoid.Health > 0 do
 			EnemyAI.updateEnemy(capturedId, capturedType)
-			task.wait(0.1)
+			task.wait(0.2)
 		end
 	end)
-	
-	EnemyId += 1
 	--print("Spawned enemy!")
 end)
 
