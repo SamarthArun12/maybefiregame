@@ -16,44 +16,53 @@ SwordModule.Animations = {
 	"rbxassetid://139580504376878","rbxassetid://139580504376878","rbxassetid://139580504376878","rbxassetid://139580504376878"
 }
 
---Damage n other stuff I want on server
 function SwordModule.activateServer(player, char, weapon, combo)
-	local humanoidRoot = char:FindFirstChild("HumanoidRootPart")
-	local DamageMult = char:GetAttribute("DamageMult") or 1
-	if not humanoidRoot then return end
+    local humanoidRoot = char:FindFirstChild("HumanoidRootPart")
+    local DamageMult = char:GetAttribute("DamageMult") or 1
+    if not humanoidRoot then return end
 
-	local hit_objects = {}
-	local hitboxSize = SwordModule.Hitboxes[combo]
-	local baseDamage = SwordModule.BaseDMG
+    -- Fetch crit attributes
+    local critChance = char:GetAttribute("CritChance") or 0
+    local hit_objects = {}
+    local hitboxSize = SwordModule.Hitboxes[combo]
+    local baseDamage = SwordModule.BaseDMG
 
-	for i = 1, 20 do
-		local hitbox = Instance.new("Part")
-		hitbox.Size = hitboxSize
-		hitbox.CFrame = humanoidRoot.CFrame * CFrame.new(0, 0, -3)
-		hitbox.Transparency = 0.9
-		hitbox.Color = Color3.fromRGB(255, 0, 0)
-		hitbox.Material = Enum.Material.SmoothPlastic
-		hitbox.Anchored = true
-		hitbox.CanCollide = false
-		hitbox.Parent = workspace
+    -- Calculate critical hit multiplier
+    local critDamage = 1
+    if math.random() <= critChance then
+        critDamage = 1 + (char:GetAttribute("CritDamage") or 0)
+        print("crit!")
+    end
 
-		for _, obj in pairs(workspace:GetPartsInPart(hitbox)) do
-			if obj.Name ~= "LineOfSight" then
-				if obj.Parent:FindFirstChild("Humanoid") and obj.Parent ~= char then
-					if not table.find(hit_objects, obj.Parent:GetAttribute("EnemyId")) then
-						obj.Parent.Humanoid:TakeDamage(baseDamage * DamageMult)
-						table.insert(hit_objects, obj.Parent:GetAttribute("EnemyId"))
-					end
-				elseif obj:GetAttribute("Attackable") == true and not table.find(hit_objects, obj.Parent) then
-					obj.Parent:SetAttribute("RecentlyHit", true)
-					table.insert(hit_objects, obj.Parent)
-				end
-			end
-		end
+    for i = 1, 20 do
+        local hitbox = Instance.new("Part")
+        hitbox.Size = hitboxSize
+        hitbox.CFrame = humanoidRoot.CFrame * CFrame.new(0, 0, -3)
+        hitbox.Transparency = 0.9
+        hitbox.Color = Color3.fromRGB(255, 0, 0)
+        hitbox.Material = Enum.Material.SmoothPlastic
+        hitbox.Anchored = true
+        hitbox.CanCollide = false
+        hitbox.Parent = workspace
 
-		game:GetService("Debris"):AddItem(hitbox, 0.1)
-		task.wait(0.01)
-	end
+        for _, obj in pairs(workspace:GetPartsInPart(hitbox)) do
+            if obj.Name ~= "LineOfSight" then
+                if obj.Parent:FindFirstChild("Humanoid") and obj.Parent ~= char then
+                    if not table.find(hit_objects, obj.Parent:GetAttribute("EnemyId")) then
+                        -- Applied critDamage to the formula matching the spear layout
+                        obj.Parent.Humanoid:TakeDamage((baseDamage * DamageMult) * critDamage)
+                        table.insert(hit_objects, obj.Parent:GetAttribute("EnemyId"))
+                    end
+                elseif obj:GetAttribute("Attackable") == true and not table.find(hit_objects, obj.Parent) then
+                    obj.Parent:SetAttribute("RecentlyHit", true)
+                    table.insert(hit_objects, obj.Parent)
+                end
+            end
+        end
+
+        game:GetService("Debris"):AddItem(hitbox, 0.1)
+        task.wait(0.01)
+    end
 end
 
 --animations n stuff I want on client

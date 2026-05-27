@@ -92,12 +92,11 @@ function enemyStats.applyChanges(enemyId)
 	enemyTable.activeChanges.reqUpdate = false
 	
 	local enemiesList = EnemyAI.Enemies
+	if not enemiesList[enemyId] then return end
 	local character = enemiesList[enemyId].model
 	if not character then return end
 	local humanoid = character.Humanoid
 	if not humanoid then return end
-	
-	print("passed checks")
 
 	for category, statsList in pairs(enemyTable.activeChanges) do
 		if type(statsList) == "boolean" then continue end

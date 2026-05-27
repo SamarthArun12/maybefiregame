@@ -57,7 +57,10 @@ function EnemyAI.newEnemy(enemyId, enemyModel, type)
 	
 end
 function EnemyAI.removeEnemy(enemyId)
+	local enemyModel = EnemyAI.Enemies[enemyId].model
 	EnemyAI.Enemies[enemyId] = nil
+	task.wait(2.5)
+	enemyModel:Destroy()
 end
 --#endregion
 

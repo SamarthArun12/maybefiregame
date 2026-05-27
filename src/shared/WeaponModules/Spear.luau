@@ -19,13 +19,22 @@ SpearModule.Animations = {
 
 --Damage n other stuff I want on server
 function SpearModule.activateServer(player, char, weapon, combo)
+	if not player or not char or not weapon or not combo then return end
 	local humanoidRoot = char:FindFirstChild("HumanoidRootPart")
-	local DamageMult = char:GetAttribute("DamageMult") or 1
 	if not humanoidRoot then return end
+	local DamageMult = char:GetAttribute("DamageMult")
+	local critChance = char:GetAttribute("CritChance")
 	local hit_objects = {}
 	local hitboxSize = SpearModule.Hitboxes[combo]
 	local baseDamage = SpearModule.BaseDMG
-	for i = 1, 20 do
+
+	local critDamage = 1
+	if math.random()<=critChance then
+		critDamage = 1+char:GetAttribute("CritDamage")
+		print("crit!")
+	end
+
+	for i = 1, 10 do
 		local hitbox = Instance.new("Part")
 		hitbox.Size = hitboxSize
 		hitbox.CFrame = humanoidRoot.CFrame * CFrame.new(0, 0, -3)
@@ -39,7 +48,7 @@ function SpearModule.activateServer(player, char, weapon, combo)
 			if obj.Name ~= "LineOfSight" then
 				if obj.Parent:FindFirstChild("Humanoid") and obj.Parent ~= char then
 					if not table.find(hit_objects, obj.Parent:GetAttribute("EnemyId")) then
-						obj.Parent.Humanoid:TakeDamage(baseDamage * DamageMult)
+						obj.Parent.Humanoid:TakeDamage((baseDamage * DamageMult) * critDamage)
 						table.insert(hit_objects, obj.Parent:GetAttribute("EnemyId"))
 					end
 				elseif obj:GetAttribute("Attackable") == true and not table.find(hit_objects, obj.Parent) then

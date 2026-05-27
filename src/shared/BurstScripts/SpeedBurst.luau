@@ -17,36 +17,44 @@ function SpeedBurst.clientChanges(character)
 end
 
 function SpeedBurst.activate(player, pos)
-	local character = player.Character
-	local humanoid = character:FindFirstChild("Humanoid")
-	local root = character:FindFirstChild("HumanoidRootPart")
+    local character = player.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    local root = character:FindFirstChild("HumanoidRootPart")
 
-	local DamageMult = character:GetAttribute("DamageMult") or 1
+    local DamageMult = character:GetAttribute("DamageMult") or 1
+    local critChance = character:GetAttribute("CritChance") or 0
+    
+    -- Calculate critical hit multiplier
+    local critDamage = 1
+    if math.random() <= critChance then
+        critDamage = 1 + (character:GetAttribute("CritDamage") or 0)
+        print("crit!")
+    end
 
-	local dashDistance = 25
-	
-	root.CFrame = pos * CFrame.new(0, 0, -dashDistance)
+    local dashDistance = 25
+    root.CFrame = CFrame.new(pos, pos + root.CFrame.LookVector) * CFrame.new(0, 0, -dashDistance)
 
-	local hitbox = Instance.new("Part")
-	hitbox.Size = Vector3.new(10, 10, dashDistance)
-	hitbox.CFrame = root.CFrame * CFrame.new(0, 0, dashDistance/2)
-	hitbox.Transparency = 0.9
-	hitbox.Color = Color3.fromRGB(255, 0, 0)
-	hitbox.Material = Enum.Material.SmoothPlastic
-	hitbox.Anchored = true
-	hitbox.CanCollide = false
-	hitbox.Parent = workspace
+    local hitbox = Instance.new("Part")
+    hitbox.Size = Vector3.new(10, 10, dashDistance)
+    hitbox.CFrame = root.CFrame * CFrame.new(0, 0, dashDistance/2)
+    hitbox.Transparency = 0.9
+    hitbox.Color = Color3.fromRGB(255, 0, 0)
+    hitbox.Material = Enum.Material.SmoothPlastic
+    hitbox.Anchored = true
+    hitbox.CanCollide = false
+    hitbox.Parent = workspace
 
-	local hitHumanoids = {}
-	for _, part in pairs(workspace:GetPartsInPart(hitbox)) do
-		local partHumanoid = part.Parent:FindFirstChild("Humanoid")
-		if partHumanoid and partHumanoid ~= humanoid and not hitHumanoids[partHumanoid] then
-			partHumanoid:TakeDamage(20 * DamageMult)
-			hitHumanoids[partHumanoid] = true
-		end
-	end
+    local hitHumanoids = {}
+    for _, part in pairs(workspace:GetPartsInPart(hitbox)) do
+        local partHumanoid = part.Parent:FindFirstChild("Humanoid")
+        if partHumanoid and partHumanoid ~= humanoid and not hitHumanoids[partHumanoid] then
+            -- Scaled damage with critDamage
+            partHumanoid:TakeDamage((20 * DamageMult) * critDamage)
+            hitHumanoids[partHumanoid] = true
+        end
+    end
 
-	game:GetService("Debris"):AddItem(hitbox, 0.1)
+    game:GetService("Debris"):AddItem(hitbox, 0.1)
 end
 
 return SpeedBurst

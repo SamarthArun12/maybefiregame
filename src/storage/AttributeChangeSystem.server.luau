@@ -147,7 +147,7 @@ while true do
 
                     if changed then
                         item:SetAttribute("Stored", stored)
-                        print("storing/burning in " .. item.Name)
+                        --print("storing/burning in " .. item.Name)
                     end
 
                     -- Threshold check for client UI replication

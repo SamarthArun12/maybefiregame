@@ -2,12 +2,11 @@ local PlayerStats = require(game.ServerStorage.PlayerStats)
 
 -- Initialize players
 game.Players.PlayerAdded:Connect(function(player)
-	PlayerStats.newPlayer(player)
 	
 	player.CharacterAdded:Connect(function(character)
-		-- ai generated
 		character:WaitForChild("Humanoid")
 		task.wait(0.1)
+		PlayerStats.newPlayer(player)
 		PlayerStats.applyChanges(player)
 	end)
 	

@@ -12,8 +12,8 @@ local baseStats = {
 		DamageMult = 1,
 		--prob 1.5x damage? compounded with damage mult
 		--final damage (X * DM) * (1 + CD)
-		CritChance = 10,
-		CritDamage = 0.5,
+		CritChance = 0.5,
+		CritDamage = 2.5,
 		None = 0
 	}
 }
@@ -65,6 +65,11 @@ function PlayerStats.newPlayer(player)
 		activeChanges = deepClone(activeChangesTemplate),
 		durations = {},
 	}
+	for statName, value in pairs(baseStats.char_stats) do
+		local character = player.Character
+		character:SetAttribute(statName, value)
+	end
+	print("new player added")
 end
 function PlayerStats.cleanup(player)
 	PlayerStats.Players[player] = nil
