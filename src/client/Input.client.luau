@@ -36,6 +36,7 @@ player:GetAttributeChangedSignal("CanPlay"):Connect(function()
 	canPlay = player:GetAttribute("CanPlay")
 end)
 
+--[[
 player:GetAttributeChangedSignal("EquippedSlot"):Connect(function()
 	storing = false
 	burning = false
@@ -44,6 +45,7 @@ player:GetAttributeChangedSignal("EquippedSlot"):Connect(function()
 	event:FireServer("storing", current, false, false)
 	event:FireServer("burning", current, false, false)
 end)
+]]
 
 UIS.InputBegan:Connect(function(input, processed)
 	if processed then return end

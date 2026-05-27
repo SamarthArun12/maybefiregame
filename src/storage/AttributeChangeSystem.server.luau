@@ -141,6 +141,7 @@ while true do
 
 		if changed then
 			tool:SetAttribute("Stored", stored)
+			print("storing/burning in"..tool.Name)
 		end
 
 		if storing and on == false then

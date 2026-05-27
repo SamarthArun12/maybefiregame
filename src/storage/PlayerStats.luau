@@ -10,6 +10,10 @@ local baseStats = {
 	},
 	char_stats = {
 		DamageMult = 1,
+		--prob 1.5x damage? compounded with damage mult
+		--final damage (X * DM) * (1 + CD)
+		CritChance = 10,
+		CritDamage = 0.5,
 		None = 0
 	}
 }
@@ -23,6 +27,7 @@ local activeChangesTemplate = {
 	},
 	char_stats = {
 		DamageMult = { items = 1, sb = 1 },
+		CritChance = { items = 1, sb = 1 },
 		None = { items = 1, sb = 1 }
 	},
 	reqUpdate = false
@@ -65,6 +70,7 @@ function PlayerStats.cleanup(player)
 	PlayerStats.Players[player] = nil
 end
 
+--handles temporary changes to stats
 function PlayerStats.addChange(player, statName, category, multChange, duration, changeName)
 	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
@@ -91,14 +97,29 @@ function PlayerStats.refreshChange(player, statName, category, multChange, durat
 		print("change not present, added")
 	end
 end
+function PlayerStats.addTickChange(player, statName, category, amount, tickRate, duration, changeName)
+    local playerTable = PlayerStats.Players[player]
+    if not playerTable then return end
 
+    local currentTime = os.clock()
+    local endTime = currentTime + duration
+	
+	--final element tracks how much total change have been done in case an undo is needed
+	--eg. in case of WalkSpeed or another proper stat ticking up, needs to be undone after
+    table.insert(playerTable.durations, {"TickEffect", category, statName, amount, tickRate, endTime, currentTime, changeName, 0})
+    print("Added ticking effect: " .. changeName)
+end
+--add something that ramps up then plateus b4 undo if needed
 
+--storing and burning related changes
 function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
 	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
+	
 	if isprimary then
-		PlayerStats.resetSB(player)
+		PlayerStats.resetSB(player, stat)
 	end
+
 	--print(string.format("player: %s | category: %s | stat: %s | change: %s | toggle: %s", tostring(player), tostring(category), tostring(stat), tostring(change), tostring(toggle)))
 	if toggle then
 		--print("toggle is true")
@@ -106,14 +127,16 @@ function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)
 		playerTable.activeChanges.reqUpdate = true
 	end
 end
-function PlayerStats.resetSB(player)
+function PlayerStats.resetSB(player, stat)
 	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 	for _, statsList in pairs(playerTable.activeChanges) do
 		--account for reqUpdate bool
 		if type(statsList) == "boolean" then continue end
-		for _, value in pairs(statsList) do
-			value.sb = 1
+		for statName, value in pairs(statsList) do
+			if statName == stat then
+				value.sb = 1
+			end
 		end
 	end
 	playerTable.activeChanges.reqUpdate = true
@@ -162,40 +185,90 @@ function PlayerStats.applyChanges(player)
 	end
 end
 function PlayerStats.recalculateAC(player)
-	local playerTable = PlayerStats.Players[player]
-	if not playerTable then return end
+    local playerTable = PlayerStats.Players[player]
+    if not playerTable then return end
 
-	local now = os.clock()
-	local wasChanged = false
+    local now = os.clock()
+    local wasChanged = false
+    
+    local char = player.Character
+    local humanoid = char and char:FindFirstChild("Humanoid")
 
-	-- Remove expired durations, does in reverse order to avoid skipping
-	for i = #playerTable.durations, 1, -1 do
-		local tuple = playerTable.durations[i]
-		if now >= tuple[4] then
-			local category = tuple[1]
-			local statName = tuple[2]
-			local mult = tuple[3]
-			playerTable.activeChanges[category][statName].items -= mult
-			table.remove(playerTable.durations, i)
-			wasChanged = true
-		end
-	end
+    --Remove anything expired, and handle tick DoT/HoT effects
+	--go in reverse so nothing accidentally skipped
+    for i = #playerTable.durations, 1, -1 do
+        local tuple = playerTable.durations[i]
+        
+        -- Handle active ticking effects (DoT/HoT)
+        if tuple[1] == "TickEffect" then
+            local category     = tuple[2]
+            local statName     = tuple[3]
+            local amountPerSec = tuple[4]
+            local tickRate     = tuple[5]
+            local endTime      = tuple[6]
+            local lastTickTime = tuple[7]
+			local totalChange  = tuple[9]
 
-	-- Apply all unapplied durations to activeChanges
-	for index, tuple in ipairs(playerTable.durations) do
-		local category = tuple[1]
-		local statName = tuple[2]
-		local mult = tuple[3]
-		local applied = tuple[5]
-		if not applied then
-			playerTable.durations[index][5] = true
-			playerTable.activeChanges[category][statName].items += mult
-			wasChanged = true
-		end
-	end
-	
-	if wasChanged then playerTable.activeChanges.reqUpdate = true end
-	PlayerStats.applyChanges(player)
+            if now >= endTime then
+				--dont want to undo a dot or hot
+				if statName ~= "Health" then
+					if category == "humanoid_stats" and humanoid then
+						humanoid[statName] = humanoid[statName] - totalChange
+						print(string.format("Expired %s: Restored %s by subtracting %f", tuple[9], statName, totalChange))
+					elseif category == "char_stats" then
+						local currentVal = char:GetAttribute(statName)
+						char:SetAttribute(statName, currentVal - totalChange)
+					end
+				end
+
+				--acc remove it from the playerTable
+				table.remove(playerTable.durations, i)
+            else
+                if now - lastTickTime >= tickRate then
+                    local changeAmnt = amountPerSec * tickRate
+                    
+                    if category == "humanoid_stats" then
+						humanoid[statName] = humanoid[statName] + changeAmnt
+                    elseif category == "char_stats" then
+                        local currentVal = char:GetAttribute(statName) or 0
+                        char:SetAttribute(statName, currentVal + changeAmnt)
+                    end
+                    
+					tuple[8] = totalChange + changeAmnt
+                    tuple[7] = now --update for last time so tick applied when needed.
+                end
+            end
+            continue --skip the flat change portions
+        end
+
+        --handle flat mod changes
+        if now >= tuple[4] then
+            local category = tuple[1]
+            local statName = tuple[2]
+            local mult = tuple[3]
+            playerTable.activeChanges[category][statName].items -= mult
+            table.remove(playerTable.durations, i)
+            wasChanged = true
+        end
+    end
+
+    -- Apply all unapplied durations to activeChanges
+    for index, tuple in ipairs(playerTable.durations) do
+        if tuple[1] == "TickEffect" then continue end -- Skip tracking here
+        
+        local category = tuple[1]
+        local statName = tuple[2]
+        local mult = tuple[3]
+        local applied = tuple[5]
+        if not applied then
+            playerTable.durations[index][5] = true
+            playerTable.activeChanges[category][statName].items += mult
+            wasChanged = true
+        end
+    end
+    
+    if wasChanged then playerTable.activeChanges.reqUpdate = true end
+    PlayerStats.applyChanges(player)
 end
 
 
