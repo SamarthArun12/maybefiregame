@@ -52,5 +52,6 @@ for weaponName, weaponStats in pairs(weapons) do
 	local weapon = WeaponsFolder:WaitForChild(weaponName)
 	for statName, value in pairs(weaponStats.Attributes) do
 		weapon:SetAttribute(statName, value)
+		print("stat: "..statName.."Value: "..weapon:GetAttribute(statName))
 	end
 end
