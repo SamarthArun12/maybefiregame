@@ -1,0 +1,91 @@
+local ProSpearModule = {}
+local rs = game.ReplicatedStorage
+
+-- Combat stats
+ProSpearModule.BaseDMG = 30
+ProSpearModule.AttackCD = 0.75
+ProSpearModule.ComboNum = 3
+ProSpearModule.ComboWindow = 1
+ProSpearModule.Hitboxes = {
+    Vector3.new(4, 4, 6),
+    Vector3.new(5, 3, 6),
+    Vector3.new(4, 3, 8)
+}
+ProSpearModule.Animations = {
+    "rbxassetid://139580504376878",
+    "rbxassetid://139580504376878",
+    "rbxassetid://139580504376878"
+}
+
+--Damage n other stuff I want on server
+function ProSpearModule.activateServer(player, char, weapon, combo)
+    if not player or not char or not weapon or not combo then return end
+    local humanoidRoot = char:FindFirstChild("HumanoidRootPart")
+    if not humanoidRoot then return end
+    local DamageMult = char:GetAttribute("DamageMult")
+    local critChance = char:GetAttribute("CritChance")
+    local hit_objects = {}
+    local hitboxSize = ProSpearModule.Hitboxes[combo]
+    local baseDamage = ProSpearModule.BaseDMG
+
+    local critDamage = 1
+    if math.random()<=critChance then
+        critDamage = 1+char:GetAttribute("CritDamage")
+        print("crit!")
+    end
+
+    for i = 1, 10 do
+        local hitbox = Instance.new("Part")
+        hitbox.Size = hitboxSize
+        hitbox.CFrame = humanoidRoot.CFrame * CFrame.new(0, 0, -3)
+        hitbox.Transparency = 0.9
+        hitbox.Color = Color3.fromRGB(255, 0, 0)
+        hitbox.Material = Enum.Material.SmoothPlastic
+        hitbox.Anchored = true
+        hitbox.CanCollide = false
+        hitbox.Parent = workspace
+        for _, obj in pairs(workspace:GetPartsInPart(hitbox)) do
+            if obj.Name ~= "LineOfSight" then
+                if obj.Parent:FindFirstChild("Humanoid") and obj.Parent ~= char then
+                    if not table.find(hit_objects, obj.Parent:GetAttribute("EnemyId")) then
+                        obj.Parent.Humanoid:TakeDamage((baseDamage * DamageMult) * critDamage)
+                        table.insert(hit_objects, obj.Parent:GetAttribute("EnemyId"))
+                    end
+                elseif obj:GetAttribute("Attackable") == true and not table.find(hit_objects, obj.Parent) then
+                    obj.Parent:SetAttribute("RecentlyHit", true)
+                    table.insert(hit_objects, obj.Parent)
+                end
+            end
+        end
+        game:GetService("Debris"):AddItem(hitbox, 0.1)
+        task.wait(0.01)
+    end
+end
+
+--animations n stuff I want on client
+function ProSpearModule.activateClient(humanoid, combo)
+    local animator = humanoid:WaitForChild("Animator")
+    local anim = Instance.new("Animation")
+    anim.AnimationId = ProSpearModule.Animations[combo]
+    local track = animator:LoadAnimation(anim)
+    track:Play()
+end
+
+function ProSpearModule.setup(player)
+    local character = player.Character
+    local weapon_name = player:GetAttribute('WeaponName')
+    local weapon = rs.Weapons:FindFirstChild(weapon_name)
+    if not weapon then return end
+    local rightArm = character:FindFirstChild('Right Arm')
+    local clonedWeapon = weapon:Clone()
+    clonedWeapon.Parent = character
+    local handle = clonedWeapon:FindFirstChild('Handle')
+    local cframeValue = clonedWeapon:FindFirstChild('Value')
+    local motor6d = Instance.new('Motor6D')
+    motor6d.Part0 = rightArm
+    motor6d.Part1 = handle
+    motor6d.C1 = cframeValue.Value
+    motor6d.Parent = handle
+end
+
+return ProSpearModule

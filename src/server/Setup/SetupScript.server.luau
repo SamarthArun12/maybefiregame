@@ -10,7 +10,7 @@ end)
 players.PlayerAdded:Connect(function(player)
 	--Stuff that stays when death
 	player:SetAttribute("Primary", "Damage")
-	player:SetAttribute("WeaponName", "Spear")
+	player:SetAttribute("WeaponName", "Sword")
 	player:SetAttribute("EquippedSlot", 1)
 	player:SetAttribute("BurstTech", "SpeedBurst")
 	player:SetAttribute("Equipped", "Offhand")
