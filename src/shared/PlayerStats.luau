@@ -1,5 +1,3 @@
-local EncodingService = game:GetService("EncodingService")
-local PerformanceControlService = game:GetService("PerformanceControlService")
 local PlayerStats = {}
 --almost entirely made by me :)
 

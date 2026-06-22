@@ -1,6 +1,6 @@
 local SpearModule = {}
 local rs = game.ReplicatedStorage
-local playersService = game:GetService("Players")
+
 local debris = game:GetService("Debris")
 
 local PlayerStats = require(rs:WaitForChild("PlayerStats"))
