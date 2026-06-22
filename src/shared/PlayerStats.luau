@@ -120,7 +120,6 @@ end
 
 --for mercy frames
 function PlayerStats.mercy(player)
-	print("mercy called")
 	local playerTable = PlayerStats.Players[player]
 	if not playerTable then return end
 
@@ -129,11 +128,9 @@ function PlayerStats.mercy(player)
 	if not char then return end
 
 	char:SetAttribute("inMercy", true)
-	print("player put in mercy")
 	task.spawn(function()
 		task.wait(mercyDur)
 		char:SetAttribute("inMercy", false)
-		print("player taken out of mercy")
 	end)
 end
 
