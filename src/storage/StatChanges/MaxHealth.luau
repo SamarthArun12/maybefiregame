@@ -2,7 +2,7 @@ local MHModule = {}
 
 MHModule.base = 100
 
-local playerStatsMS = require(game.ServerStorage:WaitForChild("PlayerStats"))
+local playerStatsMS = require(game.ReplicatedStorage:WaitForChild("PlayerStats"))
 
 --maxhealth changes temp commented out for debugging
 function MHModule.change(humanoid, mult, primary, IncDec, toggle)

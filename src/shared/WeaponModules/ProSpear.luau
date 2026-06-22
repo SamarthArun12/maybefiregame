@@ -1,5 +1,9 @@
 local ProSpearModule = {}
 local rs = game.ReplicatedStorage
+local playersService = game:GetService("Players")
+local debris = game:GetService("Debris")
+
+local PlayerStats = require(rs:WaitForChild("PlayerStats"))
 
 -- Combat stats
 ProSpearModule.BaseDMG = 30
@@ -22,15 +26,16 @@ function ProSpearModule.activateServer(player, char, weapon, combo)
     if not player or not char or not weapon or not combo then return end
     local humanoidRoot = char:FindFirstChild("HumanoidRootPart")
     if not humanoidRoot then return end
-    local DamageMult = char:GetAttribute("DamageMult")
-    local critChance = char:GetAttribute("CritChance")
+    
+    local DamageMult = char:GetAttribute("DamageMult") or 1
+    local critChance = char:GetAttribute("CritChance") or 0
     local hit_objects = {}
     local hitboxSize = ProSpearModule.Hitboxes[combo]
     local baseDamage = ProSpearModule.BaseDMG
 
     local critDamage = 1
-    if math.random()<=critChance then
-        critDamage = 1+char:GetAttribute("CritDamage")
+    if math.random() <= critChance then
+        critDamage = 1 + (char:GetAttribute("CritDamage") or 0)
         print("crit!")
     end
 
@@ -44,6 +49,7 @@ function ProSpearModule.activateServer(player, char, weapon, combo)
         hitbox.Anchored = true
         hitbox.CanCollide = false
         hitbox.Parent = workspace
+        
         for _, obj in pairs(workspace:GetPartsInPart(hitbox)) do
             if obj.Name ~= "LineOfSight" then
                 if obj.Parent:FindFirstChild("Humanoid") and obj.Parent ~= char then
@@ -52,12 +58,21 @@ function ProSpearModule.activateServer(player, char, weapon, combo)
                         table.insert(hit_objects, obj.Parent:GetAttribute("EnemyId"))
                     end
                 elseif obj:GetAttribute("Attackable") == true and not table.find(hit_objects, obj.Parent) then
-                    obj.Parent:SetAttribute("RecentlyHit", true)
-                    table.insert(hit_objects, obj.Parent)
+                    local targetChar = obj.Parent
+                    local inMercy = targetChar:GetAttribute("inMercy")
+                    
+                    if inMercy == true then
+                        print("Object/Target protected by mercy frames.")
+                    else
+                        print("hit attackable object")
+                        targetChar:SetAttribute("RecentlyHit", true)
+                        table.insert(hit_objects, targetChar)
+                        PlayerStats.mercy(player)
+                    end
                 end
             end
         end
-        game:GetService("Debris"):AddItem(hitbox, 0.1)
+        debris:AddItem(hitbox, 0.1)
         task.wait(0.01)
     end
 end

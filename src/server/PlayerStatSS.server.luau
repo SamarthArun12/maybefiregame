@@ -1,4 +1,4 @@
-local PlayerStats = require(game.ServerStorage.PlayerStats)
+local PlayerStats = require(game.ReplicatedStorage.PlayerStats)
 
 -- Initialize players
 game.Players.PlayerAdded:Connect(function(player)

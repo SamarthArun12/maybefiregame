@@ -1,3 +1,5 @@
+local EncodingService = game:GetService("EncodingService")
+local PerformanceControlService = game:GetService("PerformanceControlService")
 local PlayerStats = {}
 --almost entirely made by me :)
 
@@ -12,8 +14,10 @@ local baseStats = {
 		DamageMult = 1,
 		--prob 1.5x damage? compounded with damage mult
 		--final damage (X * DM) * (1 + CD)
-		CritChance = 0.5,
-		CritDamage = 2.5,
+		CritChance = 0.1,
+		CritDamage = 0.5,
+		mercyDuration = 0.25,
+		inMercy = false,
 		None = 0
 	}
 }
@@ -114,7 +118,26 @@ function PlayerStats.addTickChange(player, statName, category, amount, tickRate,
     table.insert(playerTable.durations, {"TickEffect", category, statName, amount, tickRate, endTime, currentTime, changeName, 0})
     print("Added ticking effect: " .. changeName)
 end
---add something that ramps up then plateus b4 undo if needed
+--add something that ramps up then plateus b4 undo if needed later
+
+--for mercy frames
+function PlayerStats.mercy(player)
+	print("mercy called")
+	local playerTable = PlayerStats.Players[player]
+	if not playerTable then return end
+
+	local mercyDur = playerTable.statValues.char_stats.mercyDuration
+	local char = player.Character
+	if not char then return end
+
+	char:SetAttribute("inMercy", true)
+	print("player put in mercy")
+	task.spawn(function()
+		task.wait(mercyDur)
+		char:SetAttribute("inMercy", false)
+		print("player taken out of mercy")
+	end)
+end
 
 --storing and burning related changes
 function PlayerStats.SBChange(player, category, stat, change, toggle, isprimary)

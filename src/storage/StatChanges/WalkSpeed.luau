@@ -2,7 +2,7 @@ local WSModule = {}
 
 WSModule.base = 32
 
-local playerStatsMS = require(game.ServerStorage:WaitForChild("PlayerStats"))
+local playerStatsMS = require(game.ReplicatedStorage:WaitForChild("PlayerStats"))
 
 function WSModule.change(humanoid, mult, primary, IncDec, toggle)
 	local factor = 1

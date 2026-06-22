@@ -3,7 +3,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local event = game.ReplicatedStorage.RemoteEvents:WaitForChild("StoreBurnInput")
 local event2 = game.ReplicatedStorage.RemoteEvents:WaitForChild("StoreBurnActivateRE")
-local playerStats = require(game.ServerStorage:WaitForChild("PlayerStats"))
+local playerStats = require(game.ReplicatedStorage:WaitForChild("PlayerStats"))
 local dt = 0.05
 
 local rate = 0.5

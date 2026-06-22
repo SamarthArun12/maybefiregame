@@ -2,7 +2,7 @@ local DMModule = {}
 
 DMModule.base = 1
 
-local playerStatsMS = require(game.ServerStorage:WaitForChild("PlayerStats"))
+local playerStatsMS = require(game.ReplicatedStorage:WaitForChild("PlayerStats"))
 
 function DMModule.change(humanoid, mult, primary, IncDec, toggle)
 	local factor = 1
